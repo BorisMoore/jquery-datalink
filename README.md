@@ -99,6 +99,16 @@ Adds linkTo, linkFrom, and linkBoth plugins.
     alert(person.name); // foo
     // ... user changes value ...
     alert(person.name); // <user typed value>
+ 
+Support for converters -- modify the value as it flows across the link
+
+    var person = {};
+    $.fn.convertFn.round = function(value) {
+        return Math.round( Math.parseFloat( value ) );
+    }
+    $("#name").linkTo("val", person, "age");
+    $("#name").val("7.5");
+    alert(person.age); // 8
     
 'linkFrom' plugin -- bind the value of the current object from the value of another
 
