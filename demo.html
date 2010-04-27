@@ -1,0 +1,101 @@
+<style type="text/css">
+    .field {
+        display: block
+    }
+    .person {
+        cursor: Hand;
+        color: Blue;
+        text-decoration: underline
+    }
+</style>
+<script src="http://code.jquery.com/jquery.js"></script>
+<script src="jquery.livelink.js"></script>
+<script>
+jQuery(function(){
+
+var person = {
+    id: 1,
+    name: "John Doe",
+    bio: "Gets around."
+}
+
+var person2 = {
+    id: 2,
+    name: "Jane Doe",
+    bio: "Unlucky."
+}
+
+var persons = [ person, person2 ];
+
+$.fn.convertFn.enclose = function(value) {
+    return "[" + value + "]";
+}
+
+$("#label").linkFrom("text", "#name", "val", "enclose");
+$("#preview").linkFrom("html", "#html", "val");
+$(person)
+    .linkBoth("name", "#name", "val")
+    .linkBoth("bio", "#html", "val");
+
+$("#showme").click(function() {
+    alert("Name '" + person.name + "', bio '" + person.bio + "'");
+});
+$("#revert").click(function() {
+    $(person).attr({
+        name: "John Doe",
+        bio: "Gets around."
+    });
+});
+
+var maxid = 2;
+$("#addperson").click(function() {
+    $.push( persons, {
+        id: maxid++,
+        name: person.name,
+        bio: person.bio
+    });
+});
+
+$([persons]).arrayChange(function(ev) {
+    alert("Changed array with operation '" + ev.change + "'. args: " + ev.arguments);
+    showPersons();
+});
+    
+function showPersons() {
+    $("ul").empty();
+    $(persons)
+        .each(function() {
+            $("<li/>", { "data-id" : this.id, text: this.name, class: "person" })
+                .click(function() {
+                    var id = parseInt($(this).attr("data-id"));
+                    $.each(persons, function(i) {
+                        if ( this.id === id ) {
+                            $.splice(persons, i, 1);
+                            return false;
+                        }
+                    });
+                })
+                .appendTo("ul");
+    });
+}
+showPersons();
+
+});
+</script>
+<div>
+    <input type="button" id="showme" value="Data?" />
+    <input type="button" id="revert" value="Revert" />
+</div>
+<span class="field">Enter your name:</span>
+<input type="text" value="" size="30" id="name" /> <span id="label"></span>
+
+<span class="field">Enter some HTML</span>
+<textarea id="html" rows="15" cols="50"></textarea>
+<span class="field">Preview</span>
+<div id="preview"></div>
+
+<div>
+Dealing with arrays
+<ul></ul>
+<input type="button" id="addperson" value="add person" />
+</div>
