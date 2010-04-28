@@ -1,4 +1,4 @@
-A jQuery live bindings plugin - created for demonstration purposes.
+A jQuery data linking plugin - created for demonstration purposes.
 Adds 'attrChanging', 'attrChange', 'arrayChanging', 'arrayChange' events.
 Adds jQuery.x array operations: pop, push, splice, sort, reverse, shift, unshift
 Adds linkTo, linkFrom, and linkBoth plugins.
