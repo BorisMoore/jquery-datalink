@@ -67,8 +67,8 @@ Adds linkTo, linkFrom, and linkBoth plugins.
     $.push(arr, 4, 5);
     
     // restricted scope
-    $("push", [arr])
-        .arrayChange(function(ev) {
+    $([arr])
+        .arrayChange("push", function(ev) {
             alert("Array operation " + ev.change + " executed with args " + ev.arguments);
         });
     // nothing
@@ -76,8 +76,8 @@ Adds linkTo, linkFrom, and linkBoth plugins.
     // Array operation push executed with args 4,5
     $.push(arr, 4, 5);
     
-    $(["push", "pop", "splice"], [arr])
-        .arrayChange(function(ev) {
+    $([arr])
+        .arrayChange(["push", "pop", "splice"], function(ev) {
             alert("Array operation " + ev.change + " executed with args " + ev.arguments);
         });
     // Array operation pop executed with args undefined

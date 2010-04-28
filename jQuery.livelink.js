@@ -163,7 +163,7 @@ $.link = function( settings ) {
     // the contents, not the array itself
     source = $($.isArray( source ) ? [ source ] : source);
     target = $($.isArray( target ) ? [ target ] : target);
-    convert = $.fn.convertFn[ convert ] || convert;
+    convert = $.convertFn[ convert ] || convert;
     var isVal = sourceAttr === "val",
         targetFn = setter_lookup[targetAttr];
     function update(ev) {
@@ -198,11 +198,13 @@ $.link = function( settings ) {
     update();
 }
 
+$.convertFn = {
+    "!": function(value) {
+        return !value;
+    }
+};
+
 $.fn.extend({
-    convertFn: {
-        "!": function() {
-        }
-    },
     linkFrom: function( targetAttr, source, sourceAttr, convert ) {
         var settings = {
             target: this
