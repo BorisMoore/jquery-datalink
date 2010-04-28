@@ -103,10 +103,10 @@ Adds linkTo, linkFrom, and linkBoth plugins.
 Support for converters -- modify the value as it flows across the link
 
     var person = {};
-    $.fn.convertFn.round = function(value) {
+    $.convertFn.round = function(value) {
         return Math.round( Math.parseFloat( value ) );
     }
-    $("#name").linkTo("val", person, "age");
+    $("#name").linkTo("val", person, "age", "round");
     $("#name").val("7.5");
     alert(person.age); // 8
     
