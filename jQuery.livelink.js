@@ -117,8 +117,8 @@ $.each( ["attrChanging", "attrChange", "arrayChanging", "arrayChange"], function
             var old_handler = handleObj.handler;
             handleObj.handler = function( event, change ) {
                 var data = handleObj.data,
-                    attrName = isattr ? change.attrName : change.change;
-                if ( !data || data === attrName || $.inArray( attrName, data ) > -1 ) {
+                    attrName = change ? (isattr ? change.attrName : change.change) : null;
+                if ( !change || !data || data === attrName || $.inArray( attrName, data ) > -1 ) {
                     $.extend( event, change );
                     // todo: support extra parameters passed to trigger as
                     // trigger('attrChange', [<change>, extra1, extra2]).
@@ -171,13 +171,12 @@ $.link = function( settings ) {
         if ( ev ) {
             newValue = ev.newValue;
         }
-        else if ( sourceAttr.indexOf( "data:" ) === 0 ) {
+        else if ( sourceAttr && sourceAttr.indexOf( "data:" ) === 0 ) {
             newValue = source.data( sourceAttr.substr( 5 ) );
         }
-        else {
-            newValue = source.attr( sourceAttr );
+        else if ( sourceAttr ) {
+            newValue = sourceAttr === "val" ? source.val() : source.attr( sourceAttr );
         }
-        var newValue = ev ? ev.newValue : ( isVal ? source.val() : source.attr( sourceAttr ) );
         if ( convert ) {
             newValue = convert( newValue, settings );
         }

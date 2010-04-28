@@ -1,0 +1,34 @@
+/*
+css adapted from:
+http://veerle.duoh.com/blog/comments/a_css_styled_table/
+*/
+    a {
+        color: #6D929B;
+    }
+    .contacts {
+        border: 1px solid #C1DAD7
+    }
+    .contacts td {
+        border-right: 1px solid #C1DAD7;
+        border-bottom: 1px solid #C1DAD7;
+        padding: 6px 6px 6px 12px;
+        color: #6D929B;
+        vertical-align: top;
+    }
+    .contacts th {
+        sans-serif;
+        color: #6D929B;
+        border-right: 1px solid #C1DAD7;
+        border-bottom: 1px solid #C1DAD7;
+        border-top: 1px solid #C1DAD7;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        text-align: left;
+        padding: 6px 6px 6px 12px;
+    }    
+    .phones td, .phones th {
+        border: none;
+        padding: 2px 2px 2px 4px;
+        vertical-align: top;
+    }
+    
