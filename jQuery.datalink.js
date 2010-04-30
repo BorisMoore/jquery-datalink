@@ -5,7 +5,7 @@
 (function($){
 
 var oldattr = $.attr,
-    oldval = $.fn.val;
+    oldval = $.fn.val,
     olddata = $.data;
 
 function attr( obj, name, value, pass ) {
