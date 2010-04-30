@@ -18,8 +18,9 @@ $.extend($.convertFn, {
     phone: function(value) {
         // turn a string phone number into a normalized one with dashes
         // and parens
-        value = parseInt(value.replace(/[\(\)\- ]/g, ""), 10).toString();
-        value = ("0000000000" + value).substr(-10);
+        value = (parseInt(value.replace(/[\(\)\- ]/g, ""), 10) || 0).toString();
+        value = "0000000000" + value;
+        value = value.substr(value.length - 10);
         value = "(" + value.substr(0,3) + ") " + value.substr(3,3) + "-" + value.substr(6);
         return value;
     },
