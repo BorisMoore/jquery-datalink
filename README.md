@@ -51,7 +51,7 @@ Adds linkTo, linkFrom, and linkBoth plugins.
             }
             
         })
-        // Allow changing attr 'y' from 'undefined' to '2'?
+        // Allow changing attr 'foo' from 'undefined' to 'bar'?
         // yes: value set, attrChange event raised
         // no: value not set, attrChange event not raised
         .attr("foo", "bar");
