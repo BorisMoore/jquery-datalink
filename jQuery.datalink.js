@@ -237,8 +237,8 @@ $.fn.extend({
         return this;
     },
     linkBoth: function( targetAttr, source, sourceAttr ) {
-        return this.linkTo( targetAttr, source, sourceAttr ).
-            linkFrom( targetAttr, source, sourceAttr );
+        return this.linkTo( targetAttr, source, sourceAttr )
+            .linkFrom( targetAttr, source, sourceAttr );
     }
 });
 
