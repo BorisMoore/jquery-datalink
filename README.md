@@ -9,35 +9,41 @@ Adds linkTo, linkFrom, and linkBoth plugins.
         alert("Change attr '" + ev.attrName + "' from '" +
             ev.oldValue + "' to '" + ev.newValue + "'.");
     }
-    
+
     $("#el").attrChange(report)
         // Change attr 'foo' from 'undefined' to 'bar'
         .attr("foo", "bar").
         // Change attr 'foo' from 'bar' to 'baz'
         .attr("foo", "baz");
-        
-     // restricted scope
-     $("#el").attrChange("x", report)
-        // Change attr 'x' from 'undefined' to '1'
-        .attr( { x: "1", y: "2" } );
-        
-     $("#el").attrChange([ "x", "y" ], report)
+
+    //restricted scope can be thought of as a filter
+    //no matter now many attributes are passed in,
+    //only those exactly matching (===) will be changed
+
+    // restricted scope of only one property
+    $("#el").attrChange("x", report)
+    // Change attr 'x' from 'undefined' to '1'
+    // Note y will not be changed because the scope of 'x' was passed in
+    .attr( { x: "1", y: "2" } );
+
+    // restricted scope of an array of properties
+    $("#el").attrChange([ "x", "y" ], report)
         // Change attr 'x' from 'undefined' to '1'
         // Change attr 'y' from 'undefined' to '2'
+        // Note z will not be changed because the scope of 'x' and 'y' was passed in
         .attr( { x: "1", y: "2", z: "3" } );
-       
-     // consolidating different mutation operations
-     // rather than a 'dataChange' event for data() operations
-     
-     $("#el").attrChange("data:foo", report)
+
+    // consolidating different mutation operations
+    // rather than a 'dataChange' event for data() operations
+    $("#el").attrChange("data:foo", report)
         // Change attr 'data:foo' from 'undefined' to 'bar'
         .data( "foo", "bar" )
         // Change attr 'data:!' from '[Object object]' to '[Object object]'
         .data( { } );
 
-     // works with val()
-     $("#el").attrChange("val", report)
-        // Change attr 'val' from 'hi' to 'bye'
+    // works with val()
+    $("#el").attrChange("val", report)
+    // Change attr 'val' from 'hi' to 'bye'
         .val( 'bye' );
 
 'attrChanging' event -- be notified before an attribute changes
@@ -46,16 +52,16 @@ Adds linkTo, linkFrom, and linkBoth plugins.
         .attrChanging(function(ev) {
             if (!confirm("Allow changing attr '" + ev.attrName + "' from '" +
                 ev.oldValue + "' to '" + ev.newValue + "'?")) {
-                
+
                 ev.preventDefault();
             }
-            
+
         })
         // Allow changing attr 'foo' from 'undefined' to 'bar'?
         // yes: value set, attrChange event raised
         // no: value not set, attrChange event not raised
         .attr("foo", "bar");
-        
+
 'arrayChange' event -- be notified when an array is modified
 
     var arr = [1,2,3];
@@ -65,7 +71,7 @@ Adds linkTo, linkFrom, and linkBoth plugins.
         });
     // Array operation push executed with args 4,5
     $.push(arr, 4, 5);
-    
+
     // restricted scope
     $([arr])
         .arrayChange("push", function(ev) {
@@ -75,7 +81,7 @@ Adds linkTo, linkFrom, and linkBoth plugins.
     $.pop(arr);
     // Array operation push executed with args 4,5
     $.push(arr, 4, 5);
-    
+
     $([arr])
         .arrayChange(["push", "pop", "splice"], function(ev) {
             alert("Array operation " + ev.change + " executed with args " + ev.arguments);
@@ -86,10 +92,10 @@ Adds linkTo, linkFrom, and linkBoth plugins.
     $.push(arr, 4, 5);
     // nothing
     $.splice(arr, 0, 1);
-    
+
 'arrayChanging' event -- be notified before an array is modified
     // works just like 'attrChange', can cancel operation
-    
+
 'linkTo' plugin -- bind the value of the current object to the value of another
 
     var person = {};
@@ -99,17 +105,18 @@ Adds linkTo, linkFrom, and linkBoth plugins.
     alert(person.name); // foo
     // ... user changes value ...
     alert(person.name); // <user typed value>
- 
+
 Support for converters -- modify the value as it flows across the link
 
     var person = {};
+    //TODO explain $.convertFn better including scope
     $.convertFn.round = function(value) {
         return Math.round( Math.parseFloat( value ) );
     }
     $("#name").linkTo("val", person, "age", "round");
     $("#name").val("7.5");
     alert(person.age); // 8
-    
+
 'linkFrom' plugin -- bind the value of the current object from the value of another
 
     var person = {};
