@@ -23,14 +23,14 @@ Adds linkTo, linkFrom, and linkBoth plugins.
     // restricted scope of only one property
     $("#el").attrChange("x", report)
     // Change attr 'x' from 'undefined' to '1'
-    // Note y will not be changed because the scope of 'x' was passed in
+    // Note no event for 'y' because the scope of 'x' was passed in
     .attr( { x: "1", y: "2" } );
 
     // restricted scope of an array of properties
     $("#el").attrChange([ "x", "y" ], report)
         // Change attr 'x' from 'undefined' to '1'
         // Change attr 'y' from 'undefined' to '2'
-        // Note z will not be changed because the scope of 'x' and 'y' was passed in
+        // Note no event for z because the scope of 'x' and 'y' was passed in
         .attr( { x: "1", y: "2", z: "3" } );
 
     // consolidating different mutation operations
