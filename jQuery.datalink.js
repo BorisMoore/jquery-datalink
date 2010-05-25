@@ -6,7 +6,9 @@
 
 var oldattr = $.attr,
     oldval = $.fn.val,
-    olddata = $.data;
+    olddata = $.data,
+    oldcleandata = $.cleanData,
+    linkId = 0;
 
 function attr( obj, name, value, pass ) {
     // an attr that supports plain objects (won't look for .style, nodeType, etc)
@@ -88,6 +90,17 @@ $.data = function( elem, name, data ) {
     return ret;
 }
 
+$.cleanData = function( elems ) {
+    for ( var i = 0, elem; (elem = elems[i]) != null; i++ ) {
+        if ( $.data( elem, "links" ) ) {
+            // remove any links that target this element
+            // as the source may not be being cleaned up
+            $.unlink( { target: elem } );
+        }
+    }
+    oldcleandata( elems );
+}
+    
 $.each( "pop push reverse shift sort splice unshift".split(" "), function( i, name ) {
     $[ name ] = function( arr ) {
         var args = $.makeArray( arguments );
@@ -101,7 +114,7 @@ $.each( "pop push reverse shift sort splice unshift".split(" "), function( i, na
 var special = $.event.special,
     formElems = /textarea|input|select/i;
 
-$.each( ["attrChanging", "attrChange", "arrayChanging", "arrayChange"], function( i, name ) {
+$.each( "attrChanging attrChange arrayChanging arrayChange".split(' '), function( i, name ) {
     var isattr = i < 2;
     
     $.fn[ name ] = function(filter, fn) {
@@ -145,56 +158,242 @@ $.extend(special.attrChange, {
         }
 });
 
-// "live" link bindings
-
 var setter_lookup = {
     val: "val",
     html: "html",
     text: "text"
 }
 
-$.link = function( settings ) {
+$.link = function( settings, context ) {
+    if ( settings.from && settings.to ) {
+        var from = settings.from,
+            sources = from.sources || from.targets,
+            sourceAttrs = from.attr,
+            converts = from.convert,
+            to = settings.to,
+            targets = to.targets || to.sources,
+            targetAttrs = to.attr;
+        sources = $.isArray( sources ) ? sources : [sources];
+        targets = $.isArray( targets ) ? targets : [targets];
+        sourceAttrs = typeof sourceAttrs === "undefined" ? null : ($.isArray( sourceAttrs ) ? sourceAttrs : [sourceAttrs]),
+        targetAttrs = typeof targetAttrs === "undefined" ? null : ($.isArray( targetAttrs ) ? targetAttrs : [targetAttrs]),
+        converts = $.isArray( converts ) ? converts : [converts];
+        $.each(sources, function(i, source) {
+            var target = targets[ Math.min( targets.length - 1, i ) ],
+                sourceAttr = sourceAttrs ? sourceAttrs[ Math.min( sourceAttrs.length - 1, i ) ] : "val",
+                targetAttr = targetAttrs ? targetAttrs[ Math.min( targetAttrs.length - 1, i ) ] : (source.name || source.id),
+                convert = converts[ Math.min( converts.length - 1, i ) ];
+            $.link({
+                source: source,
+                target: target,
+                sourceAttr: sourceAttr,
+                targetAttr: targetAttr,
+                convert: convert
+            }, context);
+        });
+        if ( settings.twoWay ) {
+            $.link({ from: to, to: from }, context);
+        }
+        return;
+    }
+    
     var source = settings.source,
         target = settings.target,
-        sourceAttr = settings.sourceAttr,
-        targetAttr = settings.targetAttr,
+        sourceAttr = settings.sourceAttr || "",
+        targetAttr = settings.targetAttr || "",
         convert = settings.convert;
     // wrap arrays in another array because $([]) is treatment of
     // the contents, not the array itself
-    source = $($.isArray( source ) ? [ source ] : source);
-    target = $($.isArray( target ) ? [ target ] : target);
+    source = $($.isArray( source ) ? [ source ] : source, context);
+    target = $($.isArray( target ) ? [ target ] : target, context);
     convert = $.convertFn[ convert ] || convert;
     var isVal = sourceAttr === "val",
         targetFn = setter_lookup[targetAttr];
-    function update(ev) {
-        var newValue;
-        if ( ev ) {
-            newValue = ev.newValue;
-        }
-        else if ( sourceAttr && sourceAttr.indexOf( "data:" ) === 0 ) {
-            newValue = source.data( sourceAttr.substr( 5 ) );
-        }
-        else if ( sourceAttr ) {
-            newValue = sourceAttr === "val" ? source.val() : source.attr( sourceAttr );
-        }
-        if ( convert ) {
-            newValue = convert( newValue, settings );
-        }
-        if ( newValue !== undefined ) {
-            if (targetFn) {
-                target[ targetFn ].call( target, newValue );
+        
+    target.each(function(i, target) {
+        var _target = $(target);
+        source.each(function(i, source) {
+            var _source = $(source);
+            var handler = function(ev) {
+                var newValue;
+                if ( ev ) {
+                    newValue = ev.newValue;
+                }
+                else if ( sourceAttr && sourceAttr.indexOf( "data:" ) === 0 ) {
+                    newValue = _source.data( sourceAttr.substr( 5 ) );
+                }
+                else if ( sourceAttr ) {
+                    newValue = sourceAttr === "val" ? _source.val() : _source.attr( sourceAttr );
+                }
+                if ( convert ) {
+                    newValue = convert( newValue, settings );
+                }
+                if ( newValue !== undefined ) {
+                    if (targetFn) {
+                        _target[ targetFn ].call( _target, newValue );
+                    }
+                    else if ( targetAttr.indexOf( "data:" ) === 0 ) {
+                        _target.data( targetAttr.substr( 5 ), newValue );
+                    }
+                    else {
+                        _target.attr( targetAttr, newValue );
+                    }
+                }
+            };
+            var id = linkId++,
+                link = {
+                    source: source,
+                    sourceAttr: sourceAttr,
+                    target: target,
+                    targetAttr: targetAttr,
+                    handler: handler
+                };
+            // register this link with the target
+            var data = $.data( target ),
+                links = data.links || (data.links = { targets: {}, sources: {} }),
+                index = links.targets;
+            index[ id ] = link;
+            // register this link with the source
+            data = $.data( source );
+            links = data.links || (data.links = { targets: {}, sources: {} });
+            index = links.sources;
+            index[ id ] = link;
+            // listen to changes on the source
+            _source.attrChange( sourceAttr, handler );
+            // force an update immediately, before the first change
+            handler();
+        });
+    });
+}
+
+/*
+Links are individually remembered via data() in order to facillitate
+removing them individually. For example, you might all at once link
+a single source to several targets, then remove the linking to one of
+the targets.
+
+Each link object looks like this:
+
+link = { source: source, sourceAttr: sourceAttr,
+         target: target, targetAttr: targetAttr,
+         handler: handler }
+
+And they are indexed per element like this:
+         
+elem.data.links = {
+    // index of links that have this element as the source
+    sources: {
+        linkId1: link1,
+        linkId2: link2,
+        ...
+    },
+    // index of links that have this element as the target
+    targets: {
+        linkId1: link1,
+        linkId2: link2,
+        ...
+    }
+}
+
+The links are stored by a unique link id rather than array
+in order to make removing them upon unlinking faster.
+*/
+
+function getLinksFor(obj, attr, isSource) {
+    var links = $.data( obj, "links" ),
+        index = links ? (links[ isSource ? "sources" : "targets" ]) : null;
+    if ( !index ) {
+        return {};
+    }
+    else if ( attr ) {
+        var matched = {};
+        $.each(index, function(linkId, link) {
+            if ( link[ isSource ? "sourceAttr" : "targetAttr" ] === attr ) {
+                matched[ linkId ] = link;
             }
-            else if ( targetAttr.indexOf( "data:" ) === 0 ) {
-                target.data( targetAttr.substr( 5 ), newValue );
-            }
-            else {
-                target.attr( targetAttr, newValue );
-            }
+        });
+        index = matched;
+    }
+    return index;
+}
+function filterBy(links, obj, objAttr, isSource) {
+    var matched = {},
+        objField = isSource ? "source" : "target",
+        objAttrField = isSource ? "sourceAttr" : "targetAttr";
+    $.each(links, function(linkId, link) {
+        if ( link[objField] === obj && ( !objAttr || link[objAttrField] === objAttr ) ) {
+            matched[ linkId ] = link;
+        }
+    });
+    return matched;
+}
+
+function getLinks( source, sourceAttr, target, targetAttr ) {
+    var matched;
+    if ( source ) {
+        matched = getLinksFor( source, sourceAttr, true );
+        if ( target ) {
+            // filter by target
+            matched = filterBy( matched, target, targetAttr );
         }
     }
-    source.attrChange( sourceAttr, update );
-    // force an update immediately, before the first change
-    update();
+    else if ( target ) {
+        matched = getLinksFor( target, targetAttr );
+        if ( source ) {
+            // filter by source
+            matched = filterBy( matched, source, sourceAttr, true );
+        }
+    }
+    else {
+        matched = {};
+    }
+    return matched;
+}
+
+function unlink( link ) {
+    // unbind handler
+    $( link.source ).unbind( "attrChange", link.handler );
+    // remove link from sources and targets list in each side's data cache
+    var links = $.data( link.source, "links" );
+    delete links.sources[ link.id ];
+    links = $.data( link.target, "links");
+    delete links.targets[ link.id ];
+    // remove references to help ensure no circular references
+    link.source = null;
+    link.target = null;
+}
+
+$.unlink = function( settings ) {
+    var source = settings.source,
+        target = settings.target,
+        sourceAttr = settings.sourceAttr || "",
+        targetAttr = settings.targetAttr || "";
+    source = source ? $($.isArray( source ) ? [ source ] : source) : null;
+    target = target ? $($.isArray( target ) ? [ target ] : target) : null;
+    function remove(source, target) {
+        var links = getLinks( source, sourceAttr, target, targetAttr );
+        $.each(links, function(linkId, link) {
+            unlink( link );
+        });
+    }
+    
+    if ( source && target ) {
+        source.each(function(i, source) {
+            target.each(function(i, target) {
+                remove( source, target );
+            });
+        });
+    }
+    else if ( source ) {
+        source.each(function(i, source) {
+            remove( source );
+        });
+    }
+    else if ( target ) {
+        target.each(function(i, target) {
+            remove( null, target );
+        });
+    }
 }
 
 $.convertFn = {
@@ -202,44 +401,5 @@ $.convertFn = {
         return !value;
     }
 };
-
-$.fn.extend({
-    linkFrom: function( targetAttr, source, sourceAttr, convert ) {
-        var settings = {
-            target: this
-        };
-        if ( $.isPlainObject( targetAttr ) ) {
-            $.extend( settings, targetAttr );
-        }
-        else {
-            settings.source = source;
-            settings.sourceAttr = sourceAttr;
-            settings.targetAttr = targetAttr;
-            settings.convert = convert;
-        }
-        $.link( settings );
-        return this;
-    },
-    linkTo: function( sourceAttr, target, targetAttr, convert ) {
-        var settings = {
-            source: this
-        };
-        if ( $.isPlainObject( sourceAttr ) ) {
-            $.extend( settings, sourceAttr );
-        }
-        else {
-            settings.target = target;
-            settings.targetAttr = targetAttr;
-            settings.sourceAttr = sourceAttr;
-            settings.convert = convert;
-        }
-        $.link( settings );
-        return this;
-    },
-    linkBoth: function( targetAttr, source, sourceAttr ) {
-        return this.linkTo( targetAttr, source, sourceAttr )
-            .linkFrom( targetAttr, source, sourceAttr );
-    }
-});
 
 })(jQuery);

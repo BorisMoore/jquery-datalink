@@ -54,16 +54,44 @@ function refresh() {
     // bind inputs to the data items
     $(".contact").each(function(i) {
         var contact = contacts[i];
-        $(".firstname", this).linkTo("val", contact, "firstName");
-        $(".lastname", this).linkTo("val", contact, "lastName");
-        $(".contact-fullname", this).linkFrom("text", contact, null, "fullname");
+        $.link({
+            from: {
+                sources: [".firstname",".lastname"],
+            },
+            to: {
+                targets: contact,
+                attr: ["firstName", "lastName"]
+            },
+        }, this);
+        
+        $.link({
+            from: {
+                sources: contact,
+                attr: "",
+                convert: "fullname"
+            },
+            to: {
+                targets: ".contact-fullname",
+                attr: "text"
+            }
+        }, this);
+        
         $(".contact-remove", this).click(function() {
             $.splice(contacts, i, 1);
         });
         $(".phone", this).each(function(i) {
             var phone = contact.phones[i];
-            $(".phone-type", this).linkTo("val", phone, "type");
-            $(".phone-number", this).linkTo("val", phone, "number", "phone");
+            $.link({
+                from: {
+                    sources: [".phone-type", ".phone-number"],
+                    convert: [null, "phone"]
+                },
+                to: {
+                    targets: phone,
+                    attr: ["type", "number"]
+                }
+            }, this);
+            
             $(".phone-remove", this).click(function() {
                 // note: I'd like to only redraw the phones portion of the
                 // template, but jquery.tmpl.js does not support nested templates
