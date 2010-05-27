@@ -63,10 +63,12 @@ function refresh() {
         $.link({
             from: {
                 sources: contact,
+                attr: "firstName lastName",
                 convert: "fullname"
             },
             to: {
-                targets: ".contact-fullname"
+                targets: ".contact-fullname",
+                update: true
             }
         }, this);
         
@@ -75,18 +77,6 @@ function refresh() {
         });
         $(".phone", this).each(function(i) {
             var phone = contact.phones[i];
-            
-            $.linkLive({
-                from: {
-                    sources: "*",
-                    convert: {
-                        ".phone-number": "phone"
-                    }
-                },
-                to: {
-                    targets: phone
-                }
-            }, this);
             
             $.link({
                 from: {

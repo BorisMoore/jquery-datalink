@@ -163,9 +163,11 @@ function processFromTo( settings, context, fn ) {
         sourceAttrs = from.attr,
         converts = from.convert,
         targets = to.targets || to.sources,
-        targetAttrs = to.attr;
+        targetAttrs = to.attr,
+        updates = to.update;
     sources = $.isArray( sources ) ? sources : [sources];
     targets = $.isArray( targets ) ? targets : [targets];
+    updates = typeof updates === "undefined" ? null : ($.isArray( updates ) ? updates : [updates]),
     sourceAttrs = typeof sourceAttrs === "undefined" ? null : ($.isArray( sourceAttrs ) ? sourceAttrs : [sourceAttrs]),
     targetAttrs = typeof targetAttrs === "undefined" ? null : ($.isArray( targetAttrs ) ? targetAttrs : [targetAttrs]),
     converts = $.isArray( converts ) ? converts : [converts];
@@ -173,17 +175,22 @@ function processFromTo( settings, context, fn ) {
         var target = targets[ Math.min( targets.length - 1, i ) ],
             sourceAttr = sourceAttrs ? sourceAttrs[ Math.min( sourceAttrs.length - 1, i ) ] : null,
             targetAttr = targetAttrs ? targetAttrs[ Math.min( targetAttrs.length - 1, i ) ] : null,
-            convert = converts[ Math.min( converts.length - 1, i ) ];
+            convert = converts[ Math.min( converts.length - 1, i ) ],
+            update = updates ? updates[ Math.min( updates.length - 1, i ) ] : null;
         fn({
             source: source,
             target: target,
             sourceAttr: sourceAttr,
             targetAttr: targetAttr,
-            convert: convert
+            convert: convert,
+            update: update
         }, context);
     });
     if ( settings.twoWay ) {
+        var update = to.update;
+        delete to.update;
         fn({ from: to, to: from }, context);
+        to.update = update;
     }
 }
 
@@ -260,7 +267,7 @@ $.linkLive = function( settings, context ) {
         }
     }
     
-    $(source, context).live("attrChange", handler);
+    $(source, context).live( "attrChange", handler );
 
     var list = liveLinks[ source ] || (liveLinks[ source ] = []);
     list.push({
@@ -313,7 +320,6 @@ $.link = function( settings, context ) {
     // the contents, not the array itself
     source = $($.isArray( source ) ? [ source ] : source, context);
     target = $($.isArray( target ) ? [ target ] : target, context);
-    convert = $.convertFn[ convert ] || convert;
     
     target.each(function(i, target) {
         var _target = $(target);
@@ -321,17 +327,23 @@ $.link = function( settings, context ) {
             var attr = sourceAttr;
             if ( !attr ) {
                 // val for inputs, text for everything else
-                var nodeName = this.nodeName;
-                attr = formElems.test( nodeName ) ? "val" : "text";
-            }
-            var handler = function(ev) {
-                var _source = $(ev.target),
-                    newValue = ev ? ev.newValue : getValue( _source, attr );
-                if ( convert ) {
-                    newValue = convert( newValue, settings );
+                if ( this.nodeType ) {
+                    var nodeName = this.nodeName;
+                    attr = formElems.test( nodeName ) ? "val" : "text";
                 }
-                if ( typeof newValue !== "undefined" ) {
-                    setValue( _source, _target, targetAttr, newValue );
+            }
+            var handler = function(ev, reverse) {
+                if ( !ev || source === ev.target ) {
+                    var _source = $(ev ? ev.target : source),
+                        newValue = ev ? ev.newValue : getValue( _source, attr ),
+                        // re-evaluate convert each occurrance to pick up dynamic changes to convertFn
+                        cv = convert ? ($.convertFn[ convert ] || convert) : null;
+                    if ( cv ) {
+                        newValue = cv( newValue, settings );
+                    }
+                    if ( typeof newValue !== "undefined" ) {
+                        setValue( _source, _target, targetAttr, newValue );
+                    }
                 }
             };
             var id = linkId++,
@@ -354,7 +366,10 @@ $.link = function( settings, context ) {
             index = links.sources;
             index[ id ] = link;
             // listen to changes on the source
-            $(source).attrChange( attr, handler );
+            $(source).attrChange( attr ? attr.split( ' ' ) : '', handler );
+            if ( settings.update ) {
+                handler();
+            }
         });
     });
 }
