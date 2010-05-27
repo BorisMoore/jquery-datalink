@@ -247,20 +247,22 @@ $.linkLive = function( settings, context ) {
     // the contents, not the array itself
     source = $.isArray( source ) ? [ source ] : source;
     target = $.isArray( target ) ? [ target ] : target;
-    convert = $.convertFn[ convert ] || convert;
-    
-    var handler = function(ev) {
-        var source = ev.target;
+        
+    var handler = function(ev, forceSource) {
+        var source = ev ? ev.target : forceSource;
         var attr = sourceAttr;
         if ( !attr ) {
             // val for inputs, text for everything else
-            var nodeName = source.nodeName;
-            attr = formElems.test( nodeName ) ? "val" : "text";
+            if ( source.nodeType ) {
+                var nodeName = source.nodeName;
+                attr = formElems.test( nodeName ) ? "val" : "text";
+            }
         }
         var _source = $(source),
-            newValue = ev ? ev.newValue : getValue( _source, attr );
-        if ( convert ) {
-            newValue = convert( newValue, settings );
+            newValue = ev ? ev.newValue : getValue( _source, attr ),
+            cv = convert ? ($.convertFn[ convert ] || convert) : null;
+        if ( cv ) {
+            newValue = cv( newValue, settings );
         }
         if ( typeof newValue !== "undefined" ) {
             setValue( _source, $(target, context), targetAttr, newValue );
@@ -278,6 +280,13 @@ $.linkLive = function( settings, context ) {
             context: context,
             handler: handler
     });
+    
+    if ( settings.update ) {
+        $(source).each(function() {
+            handler(null, this);
+        });
+        
+    }
 }
 
 $.unlinkLive = function( settings, context ) {
