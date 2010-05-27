@@ -143,6 +143,8 @@ $.each( "attrChanging attrChange arrayChanging arrayChange".split(' '), function
     }
 });
 
+special.attrChange.teardown = function() { };
+
 $(document).bind("change.attrChange", function(ev) {
     var self = $(ev.target);
     self.trigger( "attrChange", { attrName: "val", newValue: self.val() } );
