@@ -18,12 +18,12 @@
     <tr class="contact">
         <td><a href="#" class="contact-remove">remove</a></td>
         <td>
-            <input class="firstname" type="text" value="${firstName}" />
+            <input itemprop="firstName" type="text" value="${firstName}" />
             <div>
                 full name: <span class="contact-fullname"></span>
             </div>
         </td>
-        <td><input class="lastname" type="text" value="${lastName}" /></td>
+        <td><input itemProp="lastName" type="text" value="${lastName}" /></td>
         <td>
             <table class="phones">
                 <tr>
@@ -34,8 +34,8 @@
                 {{each(i,city) phones}}
                 <tr class="phone">
                     <td><a href="#" class="phone-remove">remove</td>
-                    <td><input class="phone-type" type="text" value="${type}" /></td>
-                    <td><input class="phone-number" type="text" value="${number}" /></td>
+                    <td><input class="phone-type" itemProp="type" type="text" value="${type}" /></td>
+                    <td><input class="phone-number" itemProp="number" type="text" value="${number}" /></td>
                 </tr>
                 {{/each}}
             </table>

@@ -54,25 +54,19 @@ function refresh() {
     // bind inputs to the data items
     $(".contact").each(function(i) {
         var contact = contacts[i];
-        $.link({
-            from: {
-                sources: [".firstname",".lastname"],
-            },
-            to: {
-                targets: contact,
-                attr: ["firstName", "lastName"]
-            },
+        
+        $.linkLive({
+            source: "*",
+            target: contact
         }, this);
         
         $.link({
             from: {
                 sources: contact,
-                attr: "",
                 convert: "fullname"
             },
             to: {
-                targets: ".contact-fullname",
-                attr: "text"
+                targets: ".contact-fullname"
             }
         }, this);
         
@@ -81,14 +75,26 @@ function refresh() {
         });
         $(".phone", this).each(function(i) {
             var phone = contact.phones[i];
+            
+            $.linkLive({
+                from: {
+                    sources: "*",
+                    convert: {
+                        ".phone-number": "phone"
+                    }
+                },
+                to: {
+                    targets: phone
+                }
+            }, this);
+            
             $.link({
                 from: {
                     sources: [".phone-type", ".phone-number"],
                     convert: [null, "phone"]
                 },
                 to: {
-                    targets: phone,
-                    attr: ["type", "number"]
+                    targets: phone
                 }
             }, this);
             
