@@ -1,30 +1,11 @@
-h1. Contents
-
-* "Introduction":#introduction
-** "Mutation Events":#mutate
-*** "attrChange":#attrchange
-*** "attrChanging":#attrchanging
-*** "arrayChange":#arraychange
-*** "arrayChanging":#arraychanging
-** "Linking Objects":#linking
-*** "jQuery.link":#link
-*** "jQuery.unlink":#unlink
-*** "jQuery.linkLive":#linklive
-*** "jQuery.unlinkLive":#unlinklive
-*** "Conversion and jQuery.convertFn":#converting
-
-* "Revision History":#revisionhistory
-* "Comments":#comments
-
-h1(#introduction). Introduction
+<h1>Introduction</h1>
 
 This proposal describes how support for "data linking" can be added to the jQuery core library. The term "data linking" is used here to mean "automatically linking the field of an object to another field of another object." That is to say, the two objects are "linked" to each other, where changing the value of one object (the 'source') automatically updates the value in the other object (the 'target').
 
-h2(#mutate). Mutation Events
-
+<h2>Mutation Events</h2>
 In order to link a source to a target, it is necessary to be notified when a data associated with the source object changes, so that it can be pushed onto the target object. This plugin adds some special events to jQuery to facilitiate this, which are also useful on their own.
 
-h3(#attrchange). attrChange
+<h3>attrChange</h3>
 
 The 'attrChange' event fires when an attribute of a DOM element or object is changed through the jQuery.fn.attr or jQuery.attr methods. An interesting feature of this plugin is that it specifically allows for jQuery.fn.attr to be usable on plain objects or arrays. The data(), bind(), and trigger() methods all work with plain objects, so this is a natural extension which already mostly works. However, a small change was necessary to jQuery.attr to avoid the special cases applied when the target is a plain object, like class->className, and readonly->readOnly, and that negative values of "width" are ignored, etc. So this plugin also makes it officially possible to use attr() to set fields of an object as you would expect.
 
@@ -72,7 +53,7 @@ $("#el").attrChange("val", report)
     .val( 'bye' );
 </pre>
 
-h3(#attrchanging). attrChanging
+<h3>attrChanging</h3>
 
 The 'attrChanging' event fires when an attribute of a DOM element or object is about to be changed. The ev.preventDefault() method may be called in order to prevent the change from occuring.
 
@@ -91,7 +72,7 @@ $("#el")
     .attr("foo", "bar");
 </pre>
 
-h3(#arraychange). arrayChange
+<h3>arrayChange</h3>
 
 Like the attrChange event, but fires when an Array is mutated through any of the new array mutation APIs. Information about what the mutation was is available on the event object.
 
@@ -122,16 +103,16 @@ $.push(arr, 4, 5);
 $.splice(arr, 0, 1);
 </pre>
 
-h3(#arraychanging). arrayChanging
+<h3>arrayChanging</h3>
 
 Exactly like the attrChanging event, but for arrays. Operation can be cancelled via the ev.preventDefault() method.
 
 
-h2(#linking). Linking Objects
+<h2>Linking Objects<h2>
 
 When objects are linked, changes to one are automatically forwarded to another. For example, this allows you to very quickly and easily link fields of a form to an object. Any changes to the form fields are automatically pushed onto the object, saving you from writing retrieval code. Furthermore, built-in support for converters lets you modify the format or type of the value as it flows between objects (for example, formatting a phone number, or parsing a string to a number).
 
-h3(#link). jQuery.link
+<h3>jQuery.link</h3>
 
 Sets up a link that pushes changes to any of the source objects to all target objects.
 
@@ -148,11 +129,11 @@ alert(person.name); // <user typed value>
 </pre>
 
 The 'source' may be an object, DOM element, or string selector. 
-*object*
+<strong>object</strong>
 Changes to that object through a jQuery set wrapping it will trigger the link. e.g.:
-@$(obj).attr("foo", "bar");@
+<code>$(obj).attr("foo", "bar");</code>
 
-*DOM element or selector*
+<strong>DOM element or selector</strong>
 This sets up a link from all the matching elements (if it is a selector) to all matching targets. For example, if there are 3 inputs and 3 spans on the page, 9 links are created, one from each input to each span.
 
 <pre>
@@ -162,7 +143,7 @@ $.link({
 });
 </pre>
 
-*Attributes and Microdata*
+<strong>Attributes and Microdata</strong>
 The 'sourceAttr' and 'targetAttr' fields are optional. If omitted, the attribute is determined automatically:
 
 The source attribute is determined as follows:
@@ -189,7 +170,7 @@ For example, the following sets up a link that activates whenever the val() of t
 $.link( { source: "#input1", target: "#span1" } );
 </pre>
 
-*From/To Syntax*
+<strong>From/To Syntax</strong>
 
 $.link supports creating multiple links with different rules at the same time. In this example, two form elements are mapped to two different fields of the same object.
 
@@ -225,11 +206,11 @@ $.link({
 });
 </pre>
 
-*twoWay*
+<strong>twoWay</strong>
 
 The twoWay option sets up links in both directions -- from source to target, and target to source. Changes in either will be reflected in the other. This is the reason for the 'convert' option on the 'to' settings -- those converters would be used when pushing changes from a target to a source (reverse).
 
-*Updating immediately*
+<strong>Updating immediately</strong>
 
 Sometimes it is desired that the target of a link reflect the source value immediately, even before the source is changed. You can tell link() to update the target immediately using the 'update' setting:
 
@@ -246,11 +227,11 @@ $.link({
 });
 </pre>
 
-Note that this is particularly useful when relying on the automatic target attribute determination. You can quickly populate an object with a form's current values by relying on @itemprop@ attributes or input @name@, and setting update to true to force an immediate update.
+Note that this is particularly useful when relying on the automatic target attribute determination. You can quickly populate an object with a form's current values by relying on <code>itemprop</code> attributes or input <code>name</code>, and setting update to true to force an immediate update.
 
 Note that if you put 'update' on the 'from' settings, the source is updated with the target value, even though the link usually flows from the source to the target. This allows you, for example, to setup a link from an input to an object, but have the input initially reflect the value already in the target.
 
-*Context*
+<strong>Context</strong>
 
 $.link in both direct and from/to forms allows a 2nd jQuery context parameter. This context is used if any selectors are given. For example, these are equivalent:
 
@@ -275,7 +256,7 @@ $.link({
 
 </pre>
 
-h3(#unlink). jQuery.unlink
+<h3>jQuery.unlink</h3>
 
 This removes a link previously established with $.link. The syntax is exactly like $.link, including the from/to syntax, except that the 'convert' and 'update' parameters are not used. A link is identified by four pieces of data: source, sourceAttr, target, and targetAttr. Note that it is possible to remove only a portion of a link previously created. For example, assuming there are two elements on the page with css class "foo" (#foo1 and #foo2), the following creates two links -- one from each, then removes only one of them.
 
@@ -284,7 +265,7 @@ $.link( { source: ".foo", target: target, targetAttr: "field" } );
 $.unlink( { source: "#foo1", target: target, targetAttr: "field" } );
 </pre>
 
-*Automatic unlinking*
+<strong>Automatic unlinking</strong>
 
 Links are cleaned up when its target or source is a DOM element that is being destroyed. For example, the following setups a link between an input and a span, then destroys the span by clearing it's parent html. The link is automatically removed.
 
@@ -293,7 +274,7 @@ $.link( { source: "#input1", target: "#span1" } );
 $("#span1").parent().html("");
 </pre>
 
-h3(#livelink). jQuery.linkLive
+<h3>jQuery.linkLive</h3>
 
 $.liveLink is a powerful tool that links multiple elements now or in the future. For example, to map all the input fields of a form to an object, even when form fields are dynamically added in the future:
 
@@ -310,11 +291,11 @@ $.liveLink({
 
 Note however that currently you cannot use 'twoWay' on a live link. You may use 'update'.
 
-h3(#livelink). jQuery.unlinkLive
+<h3>jQuery.unlinkLive</h3>
 
 Removes a live link previously created with $.linkLive. Syntax is the same as unlink. Note that unlike regular links, live links do not expand into all the possible sources and targets when they are created. This means you cannot 'unliveLink' a portion of a live link, you may only remove the entire live link.
 
-h3(#converting). Conversion and jQuery.convertFn
+<h3>Conversion and jQuery.convertFn</h3>
 
 Often times, it is necessary to modify the value as it flows from one side of a link to the other. For example, to convert null to "None", to format or parse a date, or parse a string to a number. The link APIs support specifying a converter function, either as a name of a function defined on jQuery.convertFn, or as a function itself.
 
@@ -372,12 +353,10 @@ alert($("#fullname").text()); // "jQuery User"
 </pre>
 
 
-h1(#revisionhistory). Revision History
+<h1>Revision History</h1>
 
 * 5/26/2010 -- Completely revised the API based on forum feedback.
 * 5/01/2010 -- Corrected comments about restricted scope -- event is suppressed, not the change.
 * 5/01/2010 -- Fixed glitches in comments and added info about restricted scope.
 * 4/29/2010 -- Expanded on converter samples.
 * 4/28/2010 -- Initial proposal published
-
-h1(#comments). Comments
