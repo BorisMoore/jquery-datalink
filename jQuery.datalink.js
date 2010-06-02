@@ -377,7 +377,7 @@ $.link = function( settings, context ) {
             // listen to changes on the source
             $(source).attrChange( attr ? attr.split( ' ' ) : '', handler );
             // update if specified
-            if ( settings.updateTarget ) {
+            if ( settings.update ) {
                 handler();
             }
         });
