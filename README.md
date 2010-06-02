@@ -294,6 +294,12 @@ $.link( { source: ".foo", target: target, targetAttr: "field" } );
 $.unlink( { source: "#foo1", target: target, targetAttr: "field" } );
 </pre>
 
+Also, you may remove many links at once by omiting some of the values. For example, this unlinks all links whose source is an element with class foo:
+
+<pre>
+$.unlink( { source: ".foo" } );
+</pre>
+
 <strong>Automatic unlinking</strong><br/>
 
 <p>
@@ -323,7 +329,7 @@ $.liveLink({
 </pre>
 
 <p>
-Note however that currently you cannot use 'twoWay' on a live link. You may use 'update'.
+Note however that currently you cannot use 'twoWay' on a live link. You may use 'update'. Also, you may use 'convert', but there may only be one converter used by all the sources. The conversion function can access the particular source causing the change to determine any specifics needed to do the conversion.
 </p>
 
 <h3>jQuery.unlinkLive</h3>

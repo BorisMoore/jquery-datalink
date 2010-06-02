@@ -341,7 +341,7 @@ $.link = function( settings, context ) {
                     attr = formElems.test( nodeName ) ? "val" : "text";
                 }
             }
-            var handler = function(ev, reverse) {
+            var handler = function(ev) {
                 if ( !ev || source === ev.target ) {
                     var _source = $(ev ? ev.target : source),
                         newValue = ev ? ev.newValue : getValue( _source, attr ),
@@ -376,7 +376,8 @@ $.link = function( settings, context ) {
             index[ id ] = link;
             // listen to changes on the source
             $(source).attrChange( attr ? attr.split( ' ' ) : '', handler );
-            if ( settings.update ) {
+            // update if specified
+            if ( settings.updateTarget ) {
                 handler();
             }
         });
