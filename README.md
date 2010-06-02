@@ -175,8 +175,8 @@ This allows for simple links that target complex scenarios. For example, the fol
 <pre>
 $.link({ source: "#form1 input", target: contact });
 
-<input type="text" itemprop="fullName" name="name" />
-<input type="text" name="birthday" />
+&lt;input type="text" itemprop="fullName" name="name" /&gt;
+&lt;input type="text" name="birthday" /&gt;
 </pre>
 
 <p>
