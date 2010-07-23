@@ -3,7 +3,7 @@
 <head>
     <title>My Contacts - Linking Demo</title>
     <link type="text/css" rel="Stylesheet" href="demo-contacts.css" />
-<script type="text/javascript" src="http://code.jquery.com/jquery.js"></script>
+<script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="jquery.datalink.js"></script>
 <script type="text/javascript" src="jquery.tmpl.js"></script>
 <script type="text/javascript" src="demo-contacts.js"></script>
@@ -13,17 +13,18 @@
         <th>First Name</th>
         <th>Last Name</th>
         <th>Phone Numbers</th>
+        <th>Age</th>
     </tr>
     {{each(i,contact) contacts}}
     <tr class="contact">
-        <td><a href="#" class="contact-remove">remove</a></td>
         <td>
-            <input itemprop="firstName" type="text" value="${firstName}" />
-            <div>
-                full name: <span class="contact-fullname"></span>
-            </div>
+            <a href="#" class="contact-remove">remove</a><br/>
+            <a href="#" class="contact-reset">reset</a><br/>
         </td>
-        <td><input itemProp="lastName" type="text" value="${lastName}" /></td>
+        <td>
+            <input name="firstName" class="contact" type="text" value="${firstName}" />
+        </td>
+        <td><input name="lastName" class="contact" type="text" value="${lastName}" /></td>
         <td>
             <table class="phones">
                 <tr>
@@ -34,12 +35,15 @@
                 {{each(i,city) phones}}
                 <tr class="phone">
                     <td><a href="#" class="phone-remove">remove</td>
-                    <td><input class="phone-type" itemProp="type" type="text" value="${type}" /></td>
-                    <td><input class="phone-number" itemProp="number" type="text" value="${number}" /></td>
+                    <td><input class="phone phone-type" name="type" type="text" value="${type}" /></td>
+                    <td><input class="phone phone-number" name="number" type="text" value="${number}" /></td>
                 </tr>
                 {{/each}}
             </table>
             <a href="#" class="newphone">add new phone</a>
+        </td>
+        <td>
+			<input type="text" class="agebar" name="age" value="${age}" />
         </td>
     </tr>
     {{/each}}

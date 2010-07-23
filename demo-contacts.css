@@ -13,7 +13,7 @@ http://veerle.duoh.com/blog/comments/a_css_styled_table/
         border-bottom: 1px solid #C1DAD7;
         padding: 6px 6px 6px 12px;
         color: #6D929B;
-        vertical-align: top;
+        vertical-align: middle;
     }
     .contacts th {
         border-right: 1px solid #C1DAD7;
@@ -23,7 +23,16 @@ http://veerle.duoh.com/blog/comments/a_css_styled_table/
         text-transform: uppercase;
         text-align: left;
         padding: 6px 6px 6px 12px;
-    }    
+    }  
+    .agebar {
+		color: #000000;
+		background-color: #8888FF;
+		text-align: center;
+		font-weight: bold;
+		border: solid 1px blue;
+		width: 2em;
+		height: 25px;
+    } 
     .phones td, .phones th {
         border: none;
         padding: 2px 2px 2px 4px;

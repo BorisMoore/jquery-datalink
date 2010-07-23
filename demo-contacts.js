@@ -2,10 +2,10 @@ jQuery(function($){
 
 // define some basic default data to start with
 var contacts = [
-    { firstName: "Dave", lastName: "Reed", phones: [
+    { firstName: "Dave", lastName: "Reed", age: 32, phones: [
         { type: "Mobile", number: "(555) 121-2121" },
         { type: "Home", number: "(555) 123-4567" } ]  },
-    { firstName: "John", lastName: "Doe", phones: [
+    { firstName: "John", lastName: "Doe", age: 87, phones: [
         { type: "Mobile", number: "(555) 444-2222" },
         { type: "Home", number: "(555) 999-1212" } ]  }
 ];
@@ -15,8 +15,7 @@ $.templates.contacts = $.tmpl($("#contacttmpl").html());
 
 $.extend($.convertFn, {
     // linking converter that normalizes phone numbers
-    phone: function(value) {
-        // turn a string phone number into a normalized one with dashes
+    phone: function(value) {// turn a string phone number into a normalized one with dashes
         // and parens
         value = (parseInt(value.replace(/[\(\)\- ]/g, ""), 10) || 0).toString();
         value = "0000000000" + value;
@@ -24,8 +23,8 @@ $.extend($.convertFn, {
         value = "(" + value.substr(0,3) + ") " + value.substr(3,3) + "-" + value.substr(6);
         return value;
     },
-    fullname: function(value, settings) {
-        return settings.source.firstName + " " + settings.source.lastName;
+    fullname: function(value, source, target) {
+        return source.firstName + " " + source.lastName;
     }
 });
 
@@ -38,13 +37,15 @@ $("#save").click(function() {
 // notice that no code here exists that explicitly redraws
 // the template.
 $("#insert").click(function() {
-    $.push(contacts, { firstName: "", lastName: "", phones: [] });
+    contacts.push({ firstName: "", lastName: "", phones: [] });
+    refresh();
 });
 
 $("#sort").click(function() {
-    $.sort(contacts, function(a,b) {
+    contacts.sort(function(a,b) {
         return a.lastName < b.lastName ? -1 : 1;
     });
+    refresh();
 });
 
 // function that clears the current template and renders it with the
@@ -52,42 +53,41 @@ $("#sort").click(function() {
 function refresh() {
     $(".contacts").empty().append("contacts", {contacts:contacts});
     // bind inputs to the data items
-    $(".contact").each(function(i) {
+    $("tr.contact").each(function(i) {
         var contact = contacts[i];
-        
-        $.linkLive({
-            source: "*",
-            target: contact
-        }, this);
-        
-        $.link({
-            from: {
-                sources: contact,
-                attr: "firstName lastName",
-                convert: "fullname"
-            },
-            to: {
-                targets: ".contact-fullname",
-                update: true
-            }
-        }, this);
+        $("input.contact", this).link(contact);
+        $('.agebar', this).link(contact, {
+			age: {
+				convertBack: function(value, source, target) {
+					$(target).width(value + "px");
+				}
+			}
+		});
+		$(contact).trigger("changeData", ["age", contact.age]);
+		
+        // todo: "update" feature
         
         $(".contact-remove", this).click(function() {
-            $.splice(contacts, i, 1);
+            contacts.splice(i, 1);
+            refresh();
         });
-        $(".phone", this).each(function(i) {
+        var original_firstName = contact.firstName,
+            original_lastName = contact.lastName;
+        $(".contact-reset", this).click(function() {
+            $(contact)
+                .data("firstName", original_firstName)
+                .data("lastName", original_lastName);
+        });
+        
+        $("tr.phone", this).each(function(i) {
             var phone = contact.phones[i];
-            
-            $.link({
-                from: {
-                    sources: [".phone-type", ".phone-number"],
-                    convert: [null, "phone"]
-                },
-                to: {
-                    targets: phone
+            $(this).link(phone, {
+                type: "type",
+                number: {
+                    name: "number",
+                    convert: "phone"
                 }
-            }, this);
-            
+            });
             $(".phone-remove", this).click(function() {
                 // note: I'd like to only redraw the phones portion of the
                 // template, but jquery.tmpl.js does not support nested templates
@@ -95,22 +95,19 @@ function refresh() {
                 // the main contacts array to force the entire thing to refresh.
                 // Note that user input is not lost since the live linking has
                 // already stored the values in the object graph.
-                $.splice(contact.phones, i, 1);
-                $([contacts]).trigger("arrayChange");
+                contact.phones.splice(i, 1);
+                refresh();
             });
         });
         $(".newphone", this).click(function() {
-            $.push(contact.phones, { type: "", number: "" });
-            $([contacts]).trigger("arrayChange");
+            contact.phones.push({ type: "", number: "" });
+            refresh();
         });
     });
 }
-
-// subscribe to changes to the contact array, automatically refreshing
-// the rendering of the template
-$([contacts]).arrayChange(refresh);
 
 // initial view on load
 refresh();
 
 });
+
