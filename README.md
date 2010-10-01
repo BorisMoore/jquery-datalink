@@ -1,12 +1,14 @@
+<p>
+==================================== WARNING ====================================<br/>
+Note: This plugin currently depends on jQuery version 1.4.3 which is not released yet. You can use a recent build from the jQuery repository, included in this repository for convinence as 'jquery.js' and 'jquery.min.js'.<br/>
+=================================================================================
+</p>
+
+
 <h1>Introduction</h1>
 <p>
 This proposal describes how support for "data linking" can be added to the jQuery core library. The term "data linking" is used here to mean "automatically linking the field of an object to another field of another object." That is to say, the two objects are "linked" to each other, where changing the value of one object (the 'source') automatically updates the value in the other object (the 'target').
 </p>
-
-<!-- forgive the font tag, this is important and github strips inline css :) -->
-<p><font color="red">
-Note: This plugin currently depends on jQuery version 1.4.3 which is not released yet. You can use a recent build from the jQuery repository, included in this repository for convinence as 'jquery.js' and 'jquery.min.js'.
-</font></p>
 
 <h2>jQuery(..).link() API</h2>
 
