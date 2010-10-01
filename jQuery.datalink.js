@@ -1,6 +1,6 @@
 /*
- * jQuery datalink plugin
- * http://github.com/nje/jquery-datalink
+ * jQuery Data Link plugin
+ * http://github.com/jquery/jquery-datalink
  */
 (function($){
 

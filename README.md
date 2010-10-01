@@ -3,13 +3,8 @@
 This proposal describes how support for "data linking" can be added to the jQuery core library. The term "data linking" is used here to mean "automatically linking the field of an object to another field of another object." That is to say, the two objects are "linked" to each other, where changing the value of one object (the 'source') automatically updates the value in the other object (the 'target').
 </p>
 
-<p>
-Note: This plugin currently depends this version of jQuery: <br/>
-<a href="http://github.com/nje/jquery/tree/DataPlainObject">http://github.com/nje/jquery/tree/DataPlainObject</a>
-<br/>
-A built copy is included in this tree for convenience as 'jquery.js'. That version is a fork from the main development tree for jQuery (and so is a later version than the current release, 1.4.2), plus contains a customization for how data() works on plain objects, as described in this ticket:<br/>
-<a href="http://dev.jquery.com/ticket/6807">http://dev.jquery.com/ticket/6807</a><br/>
-This change makes it so the data() API sets fields directly on objects when used on plain objects.
+<p style="color:red">
+Note: This plugin currently depends on jQuery version 1.4.3 which is not released yet. You can use a recent build from the jQuery repository, included in this repository for convinence as 'jquery.js' and 'jquery.min.js'.
 </p>
 
 <h2>jQuery(..).link() API</h2>
