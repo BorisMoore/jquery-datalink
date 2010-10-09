@@ -37,7 +37,7 @@ $("#save").click(function() {
 // notice that no code here exists that explicitly redraws
 // the template.
 $("#insert").click(function() {
-    contacts.push({ firstName: "", lastName: "", phones: [] });
+    contacts.push({ firstName: "", lastName: "", age: null, phones: [] });
     refresh();
 });
 
