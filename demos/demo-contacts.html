@@ -3,11 +3,11 @@
 <head>
     <title>My Contacts - Linking Demo</title>
     <link type="text/css" rel="Stylesheet" href="demo-contacts.css" />
-<script type="text/javascript" src="jquery.js"></script>
-<script type="text/javascript" src="jquery.datalink.js"></script>
-<script type="text/javascript" src="jquery.tmpl.js"></script>
+<script type="text/javascript" src="../jquery.js"></script>
+<script type="text/javascript" src="../jquery.datalink.js"></script>
+<script type="text/javascript" src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
 <script type="text/javascript" src="demo-contacts.js"></script>
-<script id="contacttmpl" type="text/html">
+<script id="contacttmpl" type="text/x-jquery-tmpl">
     <tr>
         <th>&nbsp;</th>
         <th>First Name</th>
@@ -15,7 +15,7 @@
         <th>Phone Numbers</th>
         <th>Age</th>
     </tr>
-    {{each(i,contact) contacts}}
+    {{each contacts}}
     <tr class="contact">
         <td>
             <a href="#" class="contact-remove">remove</a><br/>
@@ -32,7 +32,7 @@
                     <th>Type</th>
                     <th>Number</th>
                 </tr>
-                {{each(i,city) phones}}
+                {{each phones}}
                 <tr class="phone">
                     <td><a href="#" class="phone-remove">remove</td>
                     <td><input class="phone phone-type" name="type" type="text" value="${type}" /></td>

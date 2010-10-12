@@ -6,7 +6,8 @@ http://veerle.duoh.com/blog/comments/a_css_styled_table/
         color: #6D929B;
     }
     .contacts {
-        border: 1px solid #C1DAD7
+        border: 1px solid #C1DAD7; 
+        margin:20px;
     }
     .contacts td {
         border-right: 1px solid #C1DAD7;
