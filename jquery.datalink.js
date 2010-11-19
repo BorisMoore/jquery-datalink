@@ -79,7 +79,7 @@ function getMapping(ev, changed, newvalue, map, source, target) {
 	var target = ev.target,
 		isSetData = ev.type === "changeData",
 		mappedName,
-		convert;
+		convert,
 		name;
 	if ( isSetData ) {
 		name = changed;
@@ -89,7 +89,7 @@ function getMapping(ev, changed, newvalue, map, source, target) {
 	} else {
 		name = (target.name || target.id);
 	}
-	
+
 	if ( !map ) {
 		mappedName = name;
 	} else {
@@ -162,7 +162,7 @@ $.extend($.fn, {
 						}
 					});
 				}
-				
+
 			};
 		if ( mapping ) {
 			$.each(mapping, function(n, v) {
@@ -215,7 +215,7 @@ $.extend($.fn, {
 		this.each(function() {
 			var self = $(this),
 				links = getLinks( this ).s;
-			for (var i = links.length-1; i >= 0; i--) {                
+			for (var i = links.length-1; i >= 0; i--) {
 				var link = links[ i ];
 				if ( link.target === target ) {
 					// unbind the handlers
