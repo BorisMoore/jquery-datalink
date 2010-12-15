@@ -79,7 +79,7 @@ function getMapping(ev, changed, newvalue, map, source, target) {
 	var target = ev.target,
 		isSetData = ev.type === "changeData",
 		mappedName,
-		convert;
+		convert,
 		name;
 	if ( isSetData ) {
 		name = changed;

@@ -5,7 +5,7 @@ Documentation for the _jQuery Data Link_ plugin can be found on the jQuery docum
 
 <p>
 ==================================== WARNING ====================================<br/>
-Note: This plugin currently depends on jQuery version 1.4.3 which is not released yet. You can use a recent build from the jQuery repository, included in this repository for convenience as 'jquery.js' and 'jquery.min.js'.<br/>
+Note: This plugin currently depends on jQuery version 1.4.3.<br/>
 =================================================================================
 </p>
 
