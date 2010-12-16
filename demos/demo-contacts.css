@@ -2,30 +2,30 @@
 css adapted from:
 http://veerle.duoh.com/blog/comments/a_css_styled_table/
 */
-    a {
-        color: #6D929B;
-    }
-    .contacts {
-        border: 1px solid #C1DAD7; 
-        margin:20px;
-    }
-    .contacts td {
-        border-right: 1px solid #C1DAD7;
-        border-bottom: 1px solid #C1DAD7;
-        padding: 6px 6px 6px 12px;
-        color: #6D929B;
-        vertical-align: middle;
-    }
-    .contacts th {
-        border-right: 1px solid #C1DAD7;
-        border-bottom: 1px solid #C1DAD7;
-        border-top: 1px solid #C1DAD7;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        text-align: left;
-        padding: 6px 6px 6px 12px;
-    }  
-    .agebar {
+	a {
+		color: #6D929B;
+	}
+	.contacts {
+		border: 1px solid #C1DAD7; 
+		margin:20px;
+	}
+	.contacts td {
+		border-right: 1px solid #C1DAD7;
+		border-bottom: 1px solid #C1DAD7;
+		padding: 6px 6px 6px 12px;
+		color: #6D929B;
+		vertical-align: middle;
+	}
+	.contacts th {
+		border-right: 1px solid #C1DAD7;
+		border-bottom: 1px solid #C1DAD7;
+		border-top: 1px solid #C1DAD7;
+		letter-spacing: 2px;
+		text-transform: uppercase;
+		text-align: left;
+		padding: 6px 6px 6px 12px;
+	}  
+	.agebar {
 		color: #000000;
 		background-color: #8888FF;
 		text-align: center;
@@ -33,10 +33,10 @@ http://veerle.duoh.com/blog/comments/a_css_styled_table/
 		border: solid 1px blue;
 		width: 2em;
 		height: 25px;
-    } 
-    .phones td, .phones th {
-        border: none;
-        padding: 2px 2px 2px 4px;
-        vertical-align: top;
-    }
-    
+	}
+	.phones td, .phones th {
+		border: none;
+		padding: 2px 2px 2px 4px;
+		vertical-align: top;
+	}
+	
