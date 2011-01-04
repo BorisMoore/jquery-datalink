@@ -32,7 +32,11 @@ function getField(target) {
 		case "h7":
 		case "li":
 		case "p":
+		case "blockquote":
+		case "address":
 		case "span":
+		case "div":
+		case "pre":
 			return fnSetters.text;
 
 		// links actually have multiple value fields
