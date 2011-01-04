@@ -15,9 +15,47 @@ var oldcleandata = $.cleanData,
 		html: "html",
 		text: "text"
 	};
+	
+function getField(target) {
+	switch (target.nodeName.toLowerCase()) {
+		case "input":
+		case "select":	  
+		case "textarea":
+			return fnSetters.val;
+
+		case "h1":
+		case "h2":
+		case "h3":
+		case "h4":
+		case "h5":
+		case "h6":
+		case "h7":
+		case "li":
+		case "p":
+		case "span":
+			return fnSetters.text;
+
+		// links actually have multiple value fields
+		// like text and the link location
+		// it might be a good idea to be able to bind to specific propertys
+		// rather than just one binding per element
+		// also for getting/setting the href the jquery 'attr' method would have to be used, 
+		// which would require additionl changes
+		case "a":
+			return fnSetters.text;
+
+		default:
+			return fnSetters.html;
+	}
+}	
 
 function setValue(target, field, value) {
 	if ( target.nodeType ) {
+		// if this point was reached the supplied field would always be 'val'
+		// which only works with input elements
+		// therefore we have to figure out which setter method to use
+		field = getField(target);
+		
 		var setter = fnSetters[ field ] || "attr";
 		$(target)[setter](value);
 	} else {
