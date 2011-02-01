@@ -5,14 +5,21 @@ Documentation for the _jQuery Data Link_ plugin can be found on the jQuery docum
 
 <p>
 ==================================== WARNING ====================================<br/>
-Note: This plugin currently depends on jQuery version 1.4.3.<br/>
+<b>Note:</b> <br/>
+
+In jQuery 1.5 the behavior of the <i>$( somePlainObject ).data()</i> method has been changed. 
+
+This build of the <i>jQuery DataLink</i> plugin will work with both jQuery 1.5, and previous builds of jQuery.
+
+It provides a new <i>$( somePlainObject ).setField()</i> method, which should be used instead of <i>.data()</i>,
+for modifying field values on plain objects and triggering data linking.
 =================================================================================
 </p>
 
 
 <h1>Introduction</h1>
 <p>
-This proposal describes how support for "data linking" can be added to the jQuery core library. The term "data linking" is used here to mean "automatically linking the field of an object to another field of another object." That is to say, the two objects are "linked" to each other, where changing the value of one object (the 'source') automatically updates the value in the other object (the 'target').
+This is the official jQuery DataLink plugin. The term "data linking" is used here to mean "automatically linking the field of an object to another field of another object." That is to say, the two objects are "linked" to each other, where changing the value of one object (the 'source') automatically updates the value in the other object (the 'target').
 </p>
 
 <h2>jQuery(..).link() API</h2>
@@ -22,14 +29,29 @@ The link API allows you to very quickly and easily link fields of a form to an o
 </p>
 
 <pre>
-var person = {};
-$("form").link(person);
-$("#name").val("foo");
-alert(person.name); // foo
-// ... user changes value ...
-alert(person.name); // &lt;user typed value&gt;
-$(person).data("name", "bar");
-alert($("#name").val()); // bar
+&lt;script>
+$().ready(function() {
+	var person = {};
+	$("form").link(person);
+
+	$("[name=name]").val("NewValue"); // Set firstName to a value.
+	alert(person.name); // NewValue
+	
+	$(person).setField("name", "NewValue");
+	alert($("[name=name]").val()); // NewValue
+	
+	// ... user changes value ...
+	$("form").change(function() {
+		// &lt;user typed value&gt;
+		alert(person.name); 
+	});	
+});
+&lt;/script>
+
+&lt;form name="person">
+	&lt;label for="name">Name:&lt;/label>
+	&lt;input type="text" name="name" id="name" />
+&lt;/form>
 </pre>
 
 <p>
@@ -60,22 +82,41 @@ Often times, it is necessary to modify the value as it flows from one side of a 
 <p>
 The plugin comes with one converter named "!" which negates the value.
 </p>
+
 <pre>
-var person = {};
-$.convertFn.round = function(value) {
-    return Math.round( Math.parseFloat( value ) );
-}
-$("#age").link(person, {
-	age: {
-		convert: "round"
+&lt;script>
+$().ready(function() {
+	var person = {};
+
+	$.convertFn.round = function(value) {
+		return Math.round( parseFloat( value ) );
 	}
+
+	$("#age").link(person, {
+		age: {
+			convert: "round"
+		}
+	});
+	
+	/* Once the user enters their age, the change event will fire which, in turn, will
+	 * cause the round function to be called. This will then round the age up or down, 
+	 * set the rounded value on the object which will then cause the input field to be 
+	 * updated with the new value.
+	 */
+	$("#age").change(function() {
+		alert(person.age);
+	});
 });
-$("#name").val("7.5");
-alert(person.age); // 8
+&lt;/script>
+
+&lt;form name="person">
+	&lt;label for="age">Age:&lt;/label>
+	&lt;input type="text" name="age" id="age" />
+&lt;/form>
 </pre>
 
 <p>
-It is nice to reuse converters by naming them this way. But you may also specified the converter directly as a function.
+It is convenient to reuse converters by naming them this way. But you may also specify the converter directly as a function.
 </p>
 
 <pre>
@@ -87,6 +128,7 @@ $("#age").link(person, {
 		}
 	}
 });
+
 $("#name").val("7.5");
 alert(person.age); // 8
 </pre>
@@ -126,7 +168,7 @@ $("#rank").link(product, {
 		}
 	}
 });
-$(product).data("salesRank", 12);
+$(product).setField("salesRank", 12);
 alert($("#rank").height()); // 24
 </pre>
 <p>

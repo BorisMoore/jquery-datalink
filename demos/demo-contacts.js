@@ -61,7 +61,7 @@ function refresh() {
 				}
 			}
 		});
-		$( contact ).trigger( "changeData", ["age", contact.age] );
+		$( contact ).trigger( "changeField", ["age", contact.age] );
 		
 		// todo: "update" feature
 		
@@ -73,8 +73,8 @@ function refresh() {
 			original_lastName = contact.lastName;
 		$( ".contact-reset", this ).click( function() {
 			$( contact )
-				.data( "firstName", original_firstName )
-				.data( "lastName", original_lastName );
+				.setField( "firstName", original_firstName )
+				.setField( "lastName", original_lastName );
 		});
 		
 		$( "tr.phone", this ).each( function(i) {

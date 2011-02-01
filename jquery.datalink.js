@@ -6,7 +6,7 @@
  * Dual licensed under the MIT or GPL Version 2 licenses.
  * http://jquery.org/license
  */
-(function($){
+(function( $, undefined ){
 
 var oldcleandata = $.cleanData,
 	links = [],
@@ -14,16 +14,9 @@ var oldcleandata = $.cleanData,
 		val: "val",
 		html: "html",
 		text: "text"
-	};
-
-function setValue(target, field, value) {
-	if ( target.nodeType ) {
-		var setter = fnSetters[ field ] || "attr";
-		$(target)[setter](value);
-	} else {
-		$(target).data( field, value );
-	}
-}
+	},
+	eventNameSetField = "setField",
+	eventNameChangeField = "changeField";
 
 function getLinks(obj) {
 	var data = $.data( obj ),
@@ -33,10 +26,10 @@ function getLinks(obj) {
 }
 
 function bind(obj, wrapped, handler) {
-	wrapped.bind( obj.nodeType ? "change" : "changeData", handler );
+	wrapped.bind( obj.nodeType ? "change" : eventNameChangeField, handler );
 }
 function unbind(obj, wrapped, handler) {
-	wrapped.unbind( obj.nodeType ? "change" : "changeData", handler );
+	wrapped.unbind( obj.nodeType ? "change" : eventNameChangeField, handler );
 }
 
 $.extend({
@@ -72,12 +65,30 @@ $.extend({
 		"!": function(value) {
 			return !value;
 		}
+	},
+	setField: function(target, field, value) {
+		if ( target.nodeType ) {
+			var setter = fnSetters[ field ] || "attr";
+			$(target)[setter](value);
+		} else {
+			var parts = field.split(".");
+			parts[1] = parts[1] ? "." + parts[1] : "";
+
+				var $this = jQuery( target ),
+					args = [ parts[0], value ];
+
+			$this.triggerHandler( eventNameSetField + parts[1] + "!", args );
+			if ( value !== undefined ) {
+				target[ field ] = value;
+			}
+			$this.triggerHandler( eventNameChangeField + parts[1] + "!", args );
+		}
 	}
 });
 
-function getMapping(ev, changed, newvalue, map, source, target) {
+function getMapping(ev, changed, newvalue, map) {
 	var target = ev.target,
-		isSetData = ev.type === "changeData",
+		isSetData = ev.type === eventNameChangeField,
 		mappedName,
 		convert,
 		name;
@@ -138,7 +149,7 @@ $.extend($.fn, {
 						value = convert( value, ev.target, target );
 					}
 					if ( value !== undefined ) {
-						setValue( target, name, value );
+						$.setField( target, name, value );
 					}
 				}
 			},
@@ -158,7 +169,7 @@ $.extend($.fn, {
 							newvalue = convert( newvalue, target, this );
 						}
 						if ( newvalue !== undefined ) {
-							setValue( this, "val", newvalue );
+							$.setField( this, "val", newvalue );
 						}
 					});
 				}
@@ -234,6 +245,11 @@ $.extend($.fn, {
 					}
 				}
 			}
+		});
+	},
+	setField: function(field, value) {
+		return this.each(function() {
+			jQuery.setField( this, field, value );
 		});
 	}
 });
