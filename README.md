@@ -5,15 +5,16 @@ Documentation for the _jQuery Data Link_ plugin can be found on the jQuery docum
 
 <p>
 ==================================== WARNING ====================================<br/>
-<b>Note:</b> <br/>
-
-In jQuery 1.5 the behavior of the <i>$( somePlainObject ).data()</i> method has been changed. 
-
-This build of the <i>jQuery DataLink</i> plugin will work with both jQuery 1.5, and previous builds of jQuery.
-
-It provides a new <i>$( somePlainObject ).setField()</i> method, which should be used instead of <i>.data()</i>,
-for modifying field values on plain objects and triggering data linking.
+<i><b>Breaking change:</b>
+<br />In jQuery 1.5, the behavior of $(plainObject).data() has been modified. In order to work against all versions of jQuery including jQuery 1.5, 
+current builds of jquery-datalink have therefore been modified as follows:
+<ul>
+<li>The API to modify field values is now .setField( name, value ), rather than .data( name, value ). (Examples below).</li>
+<li>The events associated with the modified field are now "setField" and "changeField", rather than "setData" and changeData".</li>
+</ul></i>
+Note: This plugin currently depends on jQuery version 1.4.3.<br/>
 =================================================================================
+</p>
 </p>
 
 
@@ -216,12 +217,3 @@ $("#input1").link("#span1", {
 });
 $("#span1").parent().html("");
 </pre>
-
-<h1>Revision History</h1>
-
-* 7/23/2010 -- Completely revised the API based on feedback.<br />
-* 5/26/2010 -- Completely revised the API based on forum feedback.<br />
-* 5/01/2010 -- Corrected comments about restricted scope -- event is suppressed, not the change.<br />
-* 5/01/2010 -- Fixed glitches in comments and added info about restricted scope.<br />
-* 4/29/2010 -- Expanded on converter samples.<br />
-* 4/28/2010 -- Initial proposal published<br />
