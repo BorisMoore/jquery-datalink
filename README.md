@@ -185,12 +185,17 @@ Sometimes it is desired that the target of a link reflect the source value immed
 <pre>
 $(source)
 	.link(target)
-	.find("#input1").trigger("change");
+	.trigger("change");
+
 alert(target.input1); // value
 
 // or in reverse
-$(source).link(target);
-$(target).trigger("changeData", ["age", target.age]);
+$(source)
+	.link(target);
+
+$(target)
+	.trigger("changeField");
+
 alert($("[name=age]").val()); // target.age
 </pre>
 
