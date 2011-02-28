@@ -74,7 +74,7 @@ $.extend({
 			var parts = field.split(".");
 			parts[1] = parts[1] ? "." + parts[1] : "";
 
-				var $this = jQuery( target ),
+				var $this = $( target ),
 					args = [ parts[0], value ];
 
 			$this.triggerHandler( eventNameSetField + parts[1] + "!", args );
@@ -249,7 +249,7 @@ $.extend($.fn, {
 	},
 	setField: function(field, value) {
 		return this.each(function() {
-			jQuery.setField( this, field, value );
+			$.setField( this, field, value );
 		});
 	}
 });
