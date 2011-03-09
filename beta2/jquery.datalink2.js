@@ -270,7 +270,7 @@ function addBinding( map, from, to, callback, links ) {
 					}
 
 					function convertAndSetField( toPath, val, cnvt ) {
-						$.dataSetField( toObj, toPath, cnvt
+						$.setField( toObj, toPath, cnvt
 							? cnvt( val, source, toPath, toObj, thisMap )
 							: val
 						);
@@ -314,7 +314,7 @@ function addBinding( map, from, to, callback, links ) {
 				}
 			};
 //getEventArgs.splice( toObj )
-//$.dataChangeArray( toObj, "splice", 0, toObj.length, eventArgs || {
+//$.changeArray( toObj, "splice", 0, toObj.length, eventArgs || {
 //	change: "move",
 //	oldIndex: toObj.length,
 //	oldItems: toObj,
@@ -509,7 +509,7 @@ $.extend({
 	dataPull: function( from, to, maps, callback ) {
 		// TODO - provide implementation
 	},
-	dataSetField: function( object, path, value ) { // TODO add support for passing in object (map) with newValues to copy from.
+	setField: function( object, path, value ) { // TODO add support for passing in object (map) with newValues to copy from.
 		if ( path ) {
 			var $object = $( object ),
 				args = [{ path: path, value: value }],
@@ -523,12 +523,12 @@ $.extend({
 			}
 		}
 	},
-	dataGetField: function( object, path ) {
+	getField: function( object, path ) {
 		return getField( object, path );
 	},
 
 	// operations: pop push reverse shift sort splice unshift move
-	dataChangeArray: function( array, operation ) {
+	changeArray: function( array, operation ) {
 		var args = $.makeArray( arguments );
 		args.splice( 0, 2 );
 		return changeArray( array, getEventArgs[ operation ]( array, args ));

@@ -9,12 +9,7 @@
  */
 
 
-
-
-
-
 // TODO REMOVE clt, newData, itemKeyOffset? Merge recent fixes on jQuery.tmpl.js, such as __, etc.
-
 
 
 (function( $, undefined ){
@@ -240,11 +235,6 @@
 				open: defaultOpen,
 				close: defaultClose.join( "wrap" )
 			},
-			"pluginOLD": {
-				_default: { $2: "null" },
-				open: defaultOpen,
-				close: defaultClose.join( "pluginOLD" )
-			},
 			"plugin": {
 				_default: { $2: "null" },
 				open: defaultOpen,
@@ -258,11 +248,6 @@
 			"bind": {
 				_default: { $2: "$data" },
 				open: "_.push($item.bind($item,_,$1,$2));"
-			},
-			"datalink": {
-				_default: { $2: "null" },
-//				open: "_.push($item.datalink($3,$1,$2));"
-				open: "$item.datalink(_,$3,$1,$2);"
 			},
 			"each": {
 				_default: { $2: "$index, $value" },
@@ -309,47 +294,6 @@
 				// nested template, using {{tmpl}} tag
 				return $.tmpl( $.template( tmpl ), data, options, this );
 			},
-			datalink: function( content, markup, value, convert ) {
-				// nested template, using {{tmpl}} tag
-				var test = this.data;
-				if( convert ) {
-					convert = convert.convert || convert;
-					value = convert(value);
-				}
-				if ( />[^<]*$/.test( content.join(""))) { // TODO later switch to += implementation for perf reasons, which will make this easier.
-					// This is in html content
-					content[ content.length -  1 ].replace(/(>)[^<]*$/, " data-jq-link='text:"+markup+"'>" + $.encode( value));
-
-				} else {
-					content.push( $.encode( value));
-				}
-			},
-//			datalink: function( markup, value, convert ) {
-//				// nested template, using {{tmpl}} tag
-//				var test = this.data;
-//				if( convert ) {
-//					convert = convert.convert || convert;
-//					value = convert(value);
-//				}
-//				return $.encode(value);
-
-//	_.push('<input value="');
-//	$item.datalink(_, '(nameConvert) firstName',firstName,nameConvert);
-//	_.push('" title="');
-//	_.push($item.datalink(' lastName',lastName,null));
-//	_.push('" />  <b>');
-//	_.push($item.datalink(' lastName',lastName,null));
-//	_.push('</b>');}
-
-//	_.push('<input value="');
-//	_.push($item.datalink('(nameConvert) firstName',firstName,nameConvert));
-//	_.push('" title="');
-//	_.push($item.datalink(' lastName',lastName,null));
-//	_.push('" />  <b>');
-//	_.push($item.datalink(' lastName',lastName,null));
-//	_.push('</b>');}
-
-//			},
 			wrap: function( call, wrapped ) {
 				// nested template, using {{wrap}} tag
 				var options = call[4] || {};
@@ -421,15 +365,6 @@
 			var tmplItem;
 			for ( tmplItem in tmplItems ) {
 				tmplItem =  tmplItems[ tmplItem ];
-//				$( "*[data-plugin]", tmplItem.nodes ).each( function() {
-//					var test = $( this ).attr( "data-plugin" );
-//					test.replace( /(\w+)\:(\w+)(?:\(([^\)]*)\))\;?/g, function( all, key, plugin, args ){
-//					debugger;
-//
-//					});
-
-//					eval("var " + test.split(":").join( "=$(this).") + ";" );
-//				});
 				// Raise rendered event
 				if ( tmplItem.ctl && tmplItem.ctl.onItemRendered ) {
 					tmplItem.ctl.onItemRendered( tmplItem );
@@ -730,9 +665,6 @@
 				}
 				// Store template item as jQuery data on the element
 				$.data( el, "tmplItem", tmplItem );
-//				if ( applyBindInfo && $( "[" + applyBindInfo + "]", el )) {
-// 					$( tmplItem.data ).link( el ).applyLinks();
-//				}
 			}
 			function cloneTmplItem( item ) {
 				var key = item.key;
