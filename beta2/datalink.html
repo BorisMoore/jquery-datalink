@@ -24,7 +24,7 @@
 		<div data-jq-bind="css-background-color: roleColor">
 			Name: <span data-jq-bind="firstName, css-background-color: roleColor"></span> <span data-jq-bind="lastName"></span>
 		</div>
-		<input data-jq-bind="firstName" data-jq-link="firstName">
+		<input data-jq-link="firstName" data-jq-bind="firstName" />
 		<input data-jq-link="lastName" data-jq-bind="lastName, title: titleConvert( address.city )" />
 		<input data-jq-link="address.city" data-jq-bind="address.city" />
 	</div>
