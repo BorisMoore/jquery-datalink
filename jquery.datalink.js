@@ -1,5 +1,5 @@
 /*!
- * jQuery Data Link Plugin
+ * jQuery Data Link plugin 1.0.0pre
  * http://github.com/jquery/jquery-datalink
  *
  * Copyright Software Freedom Conservancy, Inc.

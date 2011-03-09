@@ -1,4 +1,6 @@
-# jQuery Data Link plugin
+# jQuery Data Link plugin plugin v1.0.0pre.
+
+_Note: This plugin is currently in beta form and may change significantly before version 1.0 is released. See tagged versions for stable Beta releases. Requires jquery version 1.4.2._
 
 Documentation for the _jQuery Data Link_ plugin can be found on the jQuery documentation site:
 <a href="http://api.jquery.com/category/plugins/data-link/">http://api.jquery.com/category/plugins/data-link</a>
