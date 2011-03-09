@@ -62,9 +62,9 @@ function refresh() {
 			}
 		});
 		$( contact ).trigger( "changeField", ["age", contact.age] );
-		
+
 		// todo: "update" feature
-		
+
 		$( ".contact-remove", this ).click( function() {
 			contacts.splice( i, 1 );
 			refresh();
@@ -76,7 +76,7 @@ function refresh() {
 				.setField( "firstName", original_firstName )
 				.setField( "lastName", original_lastName );
 		});
-		
+
 		$( "tr.phone", this ).each( function(i) {
 			var phone = contact.phones[i];
 			$( this ).link( phone, {

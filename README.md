@@ -8,7 +8,7 @@ Documentation for the _jQuery Data Link_ plugin can be found on the jQuery docum
 <p>
 ==================================== WARNING ====================================<br/>
 <i><b>Breaking change:</b>
-<br />In jQuery 1.5, the behavior of $(plainObject).data() has been modified. In order to work against all versions of jQuery including jQuery 1.5, 
+<br />In jQuery 1.5, the behavior of $(plainObject).data() has been modified. In order to work against all versions of jQuery including jQuery 1.5,
 current builds of jquery-datalink have therefore been modified as follows:
 <ul>
 <li>The API to modify field values is now .setField( name, value ), rather than .data( name, value ). (Examples below).</li>
@@ -39,15 +39,15 @@ $().ready(function() {
 
 	$("[name=name]").val("NewValue"); // Set firstName to a value.
 	alert(person.name); // NewValue
-	
+
 	$(person).setField("name", "NewValue");
 	alert($("[name=name]").val()); // NewValue
-	
+
 	// ... user changes value ...
 	$("form").change(function() {
 		// &lt;user typed value&gt;
-		alert(person.name); 
-	});	
+		alert(person.name);
+	});
 });
 &lt;/script>
 
@@ -100,10 +100,10 @@ $().ready(function() {
 			convert: "round"
 		}
 	});
-	
+
 	/* Once the user enters their age, the change event will fire which, in turn, will
-	 * cause the round function to be called. This will then round the age up or down, 
-	 * set the rounded value on the object which will then cause the input field to be 
+	 * cause the round function to be called. This will then round the age up or down,
+	 * set the rounded value on the object which will then cause the input field to be
 	 * updated with the new value.
 	 */
 	$("#age").change(function() {
@@ -157,7 +157,7 @@ $("#name").val("18");
 alert(person.canVote); // true
 </pre>
 <p>
-In this example, the converter sets two fields on the target, and neglects to return a value to cancel the default operation of setting the age field. 
+In this example, the converter sets two fields on the target, and neglects to return a value to cancel the default operation of setting the age field.
 </p>
 <p>
 Converters can also be specified for the reverse process of updating the source from a change to the target. You can use this to customize the attribute used to represent the value, rather than the default of setting the 'value'.

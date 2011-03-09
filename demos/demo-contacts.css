@@ -6,7 +6,7 @@ http://veerle.duoh.com/blog/comments/a_css_styled_table/
 		color: #6D929B;
 	}
 	.contacts {
-		border: 1px solid #C1DAD7; 
+		border: 1px solid #C1DAD7;
 		margin:20px;
 	}
 	.contacts td {
@@ -24,7 +24,7 @@ http://veerle.duoh.com/blog/comments/a_css_styled_table/
 		text-transform: uppercase;
 		text-align: left;
 		padding: 6px 6px 6px 12px;
-	}  
+	}
 	.agebar {
 		color: #000000;
 		background-color: #8888FF;
@@ -39,4 +39,3 @@ http://veerle.duoh.com/blog/comments/a_css_styled_table/
 		padding: 2px 2px 2px 4px;
 		vertical-align: top;
 	}
-	
