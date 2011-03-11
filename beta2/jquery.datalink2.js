@@ -21,6 +21,7 @@ var linkSettings, decl,
 
 	linkAttr = "data-jq-link",
 	bindAttr = "data-jq-bind",
+	pathAttr = "data-jq-path",
 
 	unsupported = {
 		"htmlhtml": 1,
@@ -85,13 +86,47 @@ var linkSettings, decl,
 
 function addBinding( map, from, to, callback, links ) {
 
-	function findJqObject( jqObject, type ) {
+	// ============================
+	// Helpers for "toObject" links
+		
+	function setFields( sourceObj, basePath, cb ) {
+		var field, isObject, sourceVal;
+
+		for ( field in sourceObj ) {
+			isObject = 1;
+			sourceVal = sourceObj[ field ];
+			if ( sourceObj.hasOwnProperty(field) && !( $.isFunction( sourceVal ) || sourceVal.toJSON)) {
+				setFields( sourceVal, (basePath ? basePath + "." : basePath) + field, cb );
+			}
+		}
+		return isObject || cb( sourceObj, basePath, thisMap.convert, sourceObj );
+	}
+					
+	function getLinkedPath( elem, path ) {
+		var basePath = elem.getAttribute( "data-jq-path" );
+		if ( basePath ) {
+			path = basePath + (path ? "." + path : "");
+		}
+		return elem.parentNode === fromObj ? path : getLinkedPath( elem.parentNode, path );
+	}
+
+	function convertAndSetField( val, path, cnvt, sourceObj ) {
+		path = isFromHtml ? getLinkedPath( sourceObj, path ) : path;
+		$.setField( toObj, path, cnvt
+			? cnvt( val, path, sourceObj, toObj, thisMap )
+			: val
+		);
+	}
+	// ============================
+	// Helper for --- TODO clean up between different cases....
+		
+		function findJqObject( jqObject, type ) {
 		var object, nodeName, path, linkedElems,
 			length = jqObject.length;
 
 		if ( length ) {
 			object = jqObject[0];
-			if ( object.nodeType ) {
+			if ( object.nodeType && type !== "from") {
 				path = thisMap[ type ];
 				if ( path ) {
 
@@ -104,7 +139,6 @@ function addBinding( map, from, to, callback, links ) {
 
 					jqObject = jqObject.find( path ).add( jqObject.filter( path ) );  // TODO REPLACE BY ABOVE in the case of default binding, and remove support for random default binding - if perf concerns require it...
 					thisMap[ type ] = 0;
-					thisMap[ type + "Attr" ] = "default";
 				}
 			} else if ( length > 1 ) {
 				jqObject = $([ jqObject.get() ]); // For objects: don't wrap multiples - consider as equivalent to a jQuery object containing single object - namely the array of objects.
@@ -112,6 +146,7 @@ function addBinding( map, from, to, callback, links ) {
 		}
 		return jqObject;
 	}
+	// ============================
 
 	var	thisMap = typeof map === "string" ? { to: map } : map && $.extend( {}, map );  // Note: "string" corresponds to 'to'. Is this intuitive? It is useful for filtering object copy: $.link( person, otherPerson, ["lastName", "address.city"] );
 
@@ -131,7 +166,7 @@ function addBinding( map, from, to, callback, links ) {
 		toObj = to[0],
 		toType = objectType( toObj ),
 		eventType = isFromHtml ? "change" : fromType + "Change",
-
+		
 		// TODO Verify optimization for memory footprint in closure captured by handlers, and perf optimization for using function declaration rather than statement?
 		handler = function( ev, eventArgs ) {
 			var cancel, sourceValue, sourcePath,
@@ -142,7 +177,7 @@ function addBinding( map, from, to, callback, links ) {
 					var setter, fromAttr, $source;
 
 					fromAttr = thisMap.fromAttr;
-					if ( fromAttr === "default" ) {
+					if ( !fromAttr ) {
 						// Merge in the default attribute bindings for this source element
 						fromAttr = linkSettings.merge[ source.nodeName.toLowerCase() ];
 						fromAttr = fromAttr ? fromAttr.from.fromAttr : "text";
@@ -178,7 +213,7 @@ function addBinding( map, from, to, callback, links ) {
 					to.each( function( _, elem ) {
 						var setter, targetPath , matchLinkAttr,
 							targetValue = sourceValue,
-							$target =  $( elem ),
+							$target = $( elem ),
 
 							htmlArrayOperation = {
 								"add": function() {
@@ -215,7 +250,7 @@ function addBinding( map, from, to, callback, links ) {
 								if ( convert && $.isFunction( convert )) {
 									targetValue = convert( targetValue, source, sourcePath, elem, thisMap );
 								}
-								if ( attr === "default" ) {
+								if ( !attr ) {
 									// Merge in the default attribute bindings for this target element
 									attr = linkSettings.merge[ elem.nodeName.toLowerCase() ];
 									attr = attr? attr.to.toAttr : "text";
@@ -256,32 +291,14 @@ function addBinding( map, from, to, callback, links ) {
 					});
 				},
 				"object": function() {
-					function setFields( sourceObj, basePath, cb ) {
-						var field, isObject, sourceVal;
 
-						for ( field in fromObj ) {
-							isObject = 1;
-							sourceVal = fromObj[ field ];
-							if ( fromObj.hasOwnProperty(field) && !( $.isFunction( sourceVal ) || sourceVal.toJSON)) {
-								setFields( sourceVal, (basePath ? basePath + "." : basePath) + field, cb );
-							}
-						}
-						return isObject || cb( basePath, sourceObj, convert );
-					}
-
-					function convertAndSetField( toPath, val, cnvt ) {
-						$.setField( toObj, toPath, cnvt
-							? cnvt( val, source, toPath, toObj, thisMap )
-							: val
-						);
-					}
 					// Find toPath using thisMap.to, or if not specified, use declarative specification
 					// provided by decl.applyLinkInfo, applied to source element
 					var convert = thisMap.Convert,
 						toPath = thisMap.to || !isFromHtml && sourcePath;
 
 					if (toPath ) {
-						convertAndSetField( toPath, thisMap.convert );
+						convertAndSetField( sourceValue, toPath, thisMap.convert, source );
 					} else if ( !isFromHtml ) {
 						// This is triggered by trigger(), and there is no thisMap.from or thisMap.to specified.
 						// This will set fields on existing objects or subobjects on the target, but will not create new subobjects, since
@@ -289,13 +306,15 @@ function addBinding( map, from, to, callback, links ) {
 						setFields( source, "", convertAndSetField );
 					} else { // from html. (Mapping from array to object not supported)
 
-						var tmplItem = $.tmplItem && $.tmplItem( source );
-						if ( !(tmplItem && tmplItem.key) || (tmplItem.data === toObj )) {
-							decl.applyLinkInfo( source, function(all, path, declCnvt){
-								// TODO support for named converters
-								convertAndSetField( path, sourceValue, window[ declCnvt ] || convert );
-							});
-						}
+//						var tmplItem = $.tmplItem && $.tmplItem( source );
+//						if ( !(tmplItem && tmplItem.key) || (tmplItem.data === toObj )) {
+						
+						decl.applyLinkInfo( source, function(all, path, declCnvt){
+							// TODO support for named converters
+							convertAndSetField( sourceValue, path, window[ declCnvt ] || convert, source );
+						});
+
+//						}
 					}
 				},
 				"array": function() {
@@ -334,17 +353,17 @@ function addBinding( map, from, to, callback, links ) {
 				ev.stopImmediatePropagation();
 			}
 		};
-
+		var j, l;
 		switch ( fromType + toType ) {
 			case "htmlarray" :
-				for ( var j=0, l=toObj.length; j<l; j++ ) {
+				for ( j=0, l=toObj.length; j<l; j++ ) {
 					addBinding( thisMap, from, $( toObj[j] ), callback, links );
 				}
 			break;
 
 			case "arrayhtml" :
 				from.bind( eventType, handler );
-				for ( var j=0, l=fromObj.length; j<l; j++ ) {
+				for ( j=0, l=fromObj.length; j<l; j++ ) {
 					addBinding( thisMap, $( fromObj[j] ), to, callback, links );
 				}
 			break;
@@ -383,6 +402,10 @@ function addBinding( map, from, to, callback, links ) {
 	}
 }
 
+
+// ============================
+// Helpers
+		
 function objectType( object ) {
 	return object
 		? object.nodeType
@@ -394,7 +417,7 @@ function objectType( object ) {
 }
 
 function declarativeMap( fromType, toType ) {
-	 return !unsupported[ fromType + toType ] && $.extend( decl.from[fromType], decl.to[toType], { decl: true } );
+	 return !unsupported[ fromType + toType ] && $.extend( {}, decl.from[fromType], decl.to[toType], { decl: true } );
 }
 
 function wrapObject( object ) {
@@ -447,6 +470,7 @@ function changeArray( array, eventArgs ) {
 	}
 	return ret;
 }
+// ============================
 
 $.extend({
 	dataLink: function( from, to, maps, callback ) {
@@ -538,11 +562,12 @@ $.extend({
 		decl: {
 			linkAttr: linkAttr,
 			bindAttr: bindAttr,
+			pathAttr: pathAttr,
 			applyLinkInfo: function( elem, setTarget ){
 				var linkInfo = elem.getAttribute( decl.linkAttr );
-				if ( linkInfo ) {
+				if ( linkInfo !== null ) {
 									//  toPath:          convert     end
-					linkInfo.replace( /([\w\.]+)(?:\:\s*(\w+)\(\)\s*)?$/g, setTarget );
+					linkInfo.replace( /([\w\.]*)(?:\:\s*(\w+)\(\)\s*)?$/, setTarget );
 				}
 //lastName:convert1()
 //	Alternative using name attribute:
@@ -552,7 +577,7 @@ $.extend({
 			},
 			applyBindInfo: function( elem, setTarget ){
 				var bindInfo = elem.getAttribute( decl.bindAttr );
-				if ( bindInfo ) {
+				if ( bindInfo !== null ) {
 										// toAttr:               toPath    convert(  toPath  )        end
 					bindInfo.replace( /(?:([\w\-]+)\:\s*)?(?:(?:([\w\.]+)|(\w+)\(\s*([\w\.]+)\s*\))(?:$|,))/g, setTarget );
 				}

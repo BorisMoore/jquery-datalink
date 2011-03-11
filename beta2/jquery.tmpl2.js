@@ -40,6 +40,29 @@
 		}
 	}
 
+	function newTmplItem2( options, parentItem, fn, data, index ) {
+		// Returns a template item data structure for a new rendered instance of a template (a 'template item').
+		// The content field is a hierarchical array of strings and nested items (to be
+		// removed and replaced by nodes field of dom elements, once inserted in DOM).
+		// Prototype is $.tmpl.item, which provides both methods and fields.
+		var newItem = this;
+		newItem.parent = parentItem || null;
+		newItem.data = data || (parentItem ? parentItem.data : {});
+		newItem._wrap = parentItem ? parentItem._wrap : null;
+		//if ( options ) {
+			$.extend( newItem, options, { nodes: [], parent: parentItem } );
+		//}
+		if ( fn ) {
+			// Build the hierarchical content to be used during insertion into DOM
+			newItem.tmpl = fn;
+			newItem.index = index || 0;
+			newItem._ctnt = newItem._ctnt || newItem.tmpl( $, newItem );
+			newItem.key = ++itemKey;
+			// Keep track of new template item, until it is stored as jQuery Data on DOM element
+			(stack.length ? wrappedItems : newTmplItems)[itemKey] = newItem;
+		}
+	}
+
 	// Override appendTo etc., in order to provide support for targeting multiple elements. (This code would disappear if integrated in jquery core).
 	$.each({
 		appendTo: "append",
@@ -290,6 +313,10 @@
 				}
 				stack.push( arguments );
 			},
+			nest2: function( tmpl, data, options ) {
+				// nested template, using {{tmpl}} tag
+				return $.tmpl( $.template( tmpl ), data, options, this );
+			},
 			nest: function( tmpl, data, options ) {
 				// nested template, using {{tmpl}} tag
 				return $.tmpl( $.template( tmpl ), data, options, this );
@@ -398,12 +425,63 @@
 	var pluginsWrapperTmpl = $.template( null, "{{html this.html()}}" );
 
 	newTmplItem.prototype = $.tmpl.item;
+	newTmplItem2.prototype = $.tmpl.item;
 
 	//========================== Private helper functions, used by code above ==========================
 
 	function renderTemplate( tmpl, data, options, parentItem ) {
-		var ret = renderTmplItems( tmpl, data, options, parentItem );
+		var ret = renderTmplItems2( tmpl, data, options, parentItem );
 		return (parentItem && tmpl) ? ret : buildStringArray( parentItem || topTmplItem, ret ).join("");
+	}
+
+	function renderTmplItems2( tmpl, data, options, parentItem ) {
+		// Render template against data as a tree of template items (nested template), or as a string (top-level template).
+		options = options || {};
+		var ret, topLevel = !parentItem;
+		if ( topLevel ) {
+			// This is a top-level tmpl call (not from a nested template using {{tmpl}})
+			parentItem = topTmplItem;
+			if ( !$.isFunction( tmpl ) ) {
+				tmpl = $.template[tmpl] || $.template( null, tmpl );
+			}
+			wrappedItems = {}; // Any wrapped items will be rebuilt, since this is top level
+		} else if ( !tmpl ) {
+			// The template item is already associated with DOM - this is a refresh.
+			// Re-evaluate rendered template for the parentItem
+			tmpl = parentItem.tmpl;
+			newTmplItems[parentItem.key] = parentItem;
+			parentItem.nodes = [];
+			if ( parentItem.wrapped ) {
+				updateWrapped( parentItem, parentItem.wrapped );
+			}
+			// Rebuild, without creating a new template item
+			return parentItem.tmpl( $, parentItem );
+		}
+		if ( !tmpl ) {
+			return null; // Could throw...
+		}
+	//	options =  $.extend( {}, options, tmpl )
+		if ( typeof data === "function" ) {
+			data = data.call( parentItem || {} );
+		}
+		if ( options.wrapped ) {
+			updateWrapped( options, options.wrapped );
+			if ( options.addIds ) {
+				// TEMPORARY?
+				tmpl = $.template( null, options._wrap );
+				options._wrap = null;
+				options.wrapped = null;
+				delete options.addIds;
+			}
+		}
+		ctl = options.ctl;
+		newData = data;
+
+		return $.isArray( data ) ?
+			$.map( data, function( dataItem, index ) {
+				return dataItem ? new newTmplItem2( options, parentItem, tmpl, dataItem, index ) : null;
+			}) :
+			[ new newTmplItem2( options, parentItem, tmpl, data ) ];
 	}
 
 	function renderTmplItems( tmpl, data, options, parentItem ) {
@@ -456,13 +534,23 @@
 			[ new newTmplItem( options, parentItem, tmpl, data ) ];
 	}
 
+	function getTmplItemPath( tmplItem ) {
+		var path = tmplItem.index;
+		while ( tmplItem.parent.key ) {
+			tmplItem = tmplItem.parent;
+			path = tmplItem.index + "." + path;
+		}
+		return path;
+	}
+	
 	function buildStringArray( tmplItem, content ) {
 		// Convert hierarchical content (tree of nested tmplItems) into flat string array of rendered content (optionally with attribute annotations for tmplItems)
 		return content ?
 			$.map( content, function( item ) {
 				return (typeof item === "string") ?
 					// Insert template item annotations, to be converted to jQuery.data( "tmplItem" ) when elems are inserted into DOM.
-					( tmplItem.annotate && tmplItem.key ? item.replace( /(<\w+)\s(?![^>]*data-jq-item=)([^>]*)/g, "$1 " + tmplItmAtt + "=\"" + (tmplItem.key - itemKeyOffset) + "\" $2" ) : item) :
+//					( tmplItem.annotate && tmplItem.key ? item.replace( /(<\w+)(?!\sdata-jq-item)([^>]*)/, "$1 " + tmplItmAtt + "=\"" + (tmplItem.key - itemKeyOffset) + "\" " + "data-jq-path" + "=\"" + getTmplItemPath( tmplItem ) + "\" $2" ) : item) :
+					( tmplItem.annotate && tmplItem.key ? item.replace( /(<\w+)(?!\sdata-jq-item)([^>]*)/, "$1 " + "data-jq-path" + "=\"" + getTmplItemPath( tmplItem ) + "\" $2" ) : item) :
 					// This is a child template item. Build nested template.
 					buildStringArray( item, item._ctnt );
 			}) :
@@ -564,7 +652,7 @@
 						tag[ slash ? "close" : "open" ]
 							.split( "$notnull_1" ).join( target ? "typeof(" + target + ")!=='undefined' && (" + target + ")!=null" : "true" )
 							.split( "$1a" ).join( exprAutoFnDetect )
-							.split( "$3" ).join( "'" + all.slice( type.length+2, -2 ) + "'" )  // TODO Optimize for perf later...
+//							.split( "$3" ).join( "'" + all.slice( type.length+2, -2 ) + "'" )  // TODO Optimize for perf later...
 							.split( "$1" ).join( expr )
 							.split( "$2" ).join( fnargs ?
 								fnargs

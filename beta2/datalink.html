@@ -37,18 +37,42 @@
 
 	<script type="text/javascript">
 		var person = {
-			firstName: "Jo",
-			lastName: "Proctor",
-			address: {
-				city: "Redmond"
+				firstName: "Jo",
+				lastName: "Proctor",
+				address: {
+					city: "Redmond",
+				},
+				roleColor: "yellow"
 			},
-			roleColor: "yellow"
-		};
+			person2 = {
+				firstName: "Jo2",
+				lastName: "Proctor2",
+				address: {
+					city: "Redmond2",
+				},
+				roleColor: "green"
+			},
+			person3 = {
+				firstName: "Jo3",
+				lastName: "Proctor3",
+				address: {
+					city: "Redmond3",
+				},
+				roleColor: "red"
+			};
 
 		$.dataLink( person, "#myContainer" ).push();
+	
 		$.dataLink( "#myContainer", person );
+	
+		$.dataLink( person, person2 );
+		$.dataLink( person, person3 ).push();
+		
+		function nameConvert( value ) {
+			return value + " lives in";
+		}
 
-		function titleConvert( value, source, path, target ) {
+		function titleConvert( value, source, path, target, map ) {
 			return source.firstName + " lives in " + value;
 		}
 
@@ -62,12 +86,17 @@
 			// Either of these will work, thanks to the binding to intermediate objects
 			$.setField( person, "address.city", person.address.city + "Xxx" );
 		}
+
 	</script>
 
 	<script type="text/javascript">
 		function showData() {
 			$( "#console" ).append("-----------------");
 			$( "#showData" ).tmpl( person ).appendTo( "#console" );
+			$( "#console" ).append("-----------------");
+			$( "#showData" ).tmpl( person2 ).appendTo( "#console" );
+			$( "#console" ).append("-----------------");
+			$( "#showData" ).tmpl( person3 ).appendTo( "#console" );
 		}
 	</script>
 
