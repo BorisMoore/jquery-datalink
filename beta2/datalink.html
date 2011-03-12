@@ -18,7 +18,7 @@
 	<button onclick="setCity()">set city</button>
 	<hr /><br />
 
-	<div id="myContainer">
+	<div id="myDeclarative">
 		<p data-jq-bind="css-background-color: roleColor">
 			Name: <span data-jq-bind="firstName, css-background-color: roleColor"></span> <span data-jq-bind="lastName"></span>
 		</p>
@@ -27,6 +27,20 @@
 			<input data-jq-link="lastName" data-jq-bind="lastName, title: titleConvert( address.city )" />
 			<input data-jq-link="address.city" data-jq-bind="address.city" />
 			<input data-jq-link="roleColor" data-jq-bind="roleColor" />
+		</p>
+		<p>
+			<span data-jq-bind="nameConvert( firstName )"></span>
+			<span data-jq-bind="address.city"></span>
+		</p>
+
+	</div>
+
+	<div id="myExplicit">
+		<p class="cityWrapper">
+			City: <span class="city"></span>
+		</p>
+		<p>
+			<input name="city" />
 		</p>
 	</div>
 
@@ -40,7 +54,7 @@
 				firstName: "Jo",
 				lastName: "Proctor",
 				address: {
-					city: "Redmond",
+					city: "Redmond"
 				},
 				roleColor: "yellow"
 			},
@@ -48,7 +62,7 @@
 				firstName: "Jo2",
 				lastName: "Proctor2",
 				address: {
-					city: "Redmond2",
+					city: "Redmond2"
 				},
 				roleColor: "green"
 			},
@@ -56,18 +70,45 @@
 				firstName: "Jo3",
 				lastName: "Proctor3",
 				address: {
-					city: "Redmond3",
+					city: "Redmond3"
 				},
 				roleColor: "red"
 			};
 
-		$.dataLink( person, "#myContainer" ).push();
+		$.dataLink( person, "#myDeclarative" ).push();
 	
-		$.dataLink( "#myContainer", person );
+		$.dataLink( "#myDeclarative", person );
 	
 		$.dataLink( person, person2 );
 		$.dataLink( person, person3 ).push();
 		
+		$.dataLink( person, "#myExplicit", [
+			{ 
+				from: "address.city",
+				to: ".city"
+			},
+			{ 
+				from: "address.city",
+				to: "input[name = city]"
+			},
+			{ 
+				from: "roleColor",
+				to: ".cityWrapper",
+				toAttr: "css-background-color"
+			},
+			{ 
+				from: "address.city",
+				to: "input[name = city]",
+				toAttr: "title",
+				convert: titleConvert
+			}		
+		]).push();
+
+		$.dataLink( "#myExplicit", person, { 
+			from: "input[name = city]",
+			to: "address.city"
+		});
+
 		function nameConvert( value ) {
 			return value + " lives in";
 		}

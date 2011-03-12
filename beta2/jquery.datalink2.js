@@ -353,7 +353,9 @@ function addBinding( map, from, to, callback, links ) {
 				ev.stopImmediatePropagation();
 			}
 		};
+		
 		var j, l;
+		
 		switch ( fromType + toType ) {
 			case "htmlarray" :
 				for ( j=0, l=toObj.length; j<l; j++ ) {
@@ -366,6 +368,20 @@ function addBinding( map, from, to, callback, links ) {
 				for ( j=0, l=fromObj.length; j<l; j++ ) {
 					addBinding( thisMap, $( fromObj[j] ), to, callback, links );
 				}
+			break;
+
+			case "objecthtml" :
+				if ( thisMap.decl ) {
+					to = to.find( "[ data-jq-bind ]" ).add( to.filter( "[ data-jq-bind ]" ) ); 
+				//	thisMap.to = 0;
+				}
+//	TODO Replace with this style for better perf:
+//	elems = elem.getElementsByTagName("*");
+//	for ( m = elems.length - 1; m >= 0; m-- ) {
+//		processItemKey( elems[m] );
+//	}
+//	processItemKey( elem );
+				from.bind( eventType, handler );
 			break;
 
 			default:
@@ -414,10 +430,6 @@ function objectType( object ) {
 				? "array"
 				: "object"
 		: "none";
-}
-
-function declarativeMap( fromType, toType ) {
-	 return !unsupported[ fromType + toType ] && $.extend( {}, decl.from[fromType], decl.to[toType], { decl: true } );
 }
 
 function wrapObject( object ) {
@@ -482,7 +494,7 @@ $.extend({
 			args[3] = args.pop();
 			return $.dataLink.apply( $, args );
 		}
-		var i,
+		var i, fromType, toType,
 			links = [],
 			linkset = {   // TODO Consider exposing as prototype, for extension
 				links: links,
@@ -514,8 +526,17 @@ $.extend({
 		if ( from ) {
 			from = wrapObject( from );
 			to = wrapObject( to );
+			fromType = objectType( from[ 0 ]);
+			toType = objectType( to[ 0 ]);
+			maps = maps 
+				|| !unsupported[ fromType + toType ] 
+				&& { 
+					decl: true,  
+					from: fromType === "html" ? "input[" + linkAttr + "]" : undefined//,
+		//			to: toType === "html" ? "[" + bindAttr + "]" : undefined
+				};
 
-			if ( maps = maps || declarativeMap( objectType( from[ 0 ]), objectType( to[ 0 ]))) {
+			if ( maps ) {
 				maps = $.isArray( maps ) ? maps : [ maps ];
 
 				i = maps.length;
@@ -580,18 +601,6 @@ $.extend({
 				if ( bindInfo !== null ) {
 										// toAttr:               toPath    convert(  toPath  )        end
 					bindInfo.replace( /(?:([\w\-]+)\:\s*)?(?:(?:([\w\.]+)|(\w+)\(\s*([\w\.]+)\s*\))(?:$|,))/g, setTarget );
-				}
-			},
-			from: {
-				object: {},
-				html: {
-					from: "input[" + linkAttr + "]"
-				}
-			},
-			to: {
-				object: {},
-				html: {
-					to: "[" + bindAttr + "]"
 				}
 			}
 		},
