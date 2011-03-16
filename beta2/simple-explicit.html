@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<script type="text/javascript" src="http://code.jquery.com/jquery.js"></script>
+	<script src="jquery.datalink2.js" type="text/javascript"></script>
+	<script src="jquery.tmpl2.js" type="text/javascript"></script>
+</head>
+<body>
+	<button onclick="showData()">show data</button>
+
+	<button onclick="setNameAndColor()">set name and color</button>
+	<button onclick="setCity()">set city</button>
+	<hr /><br />
+
+	<h3>Declarative</h3>
+
+	<form id="myDeclarative">
+		<p class="roleColor">
+			Name: <span data-field="firstName"></span> <span data-field="lastName"></span>
+		</p>
+		<p>
+			<input name="firstName" />
+			<input name="lastName" class="lastName" />
+			<input name="address.city" />
+			<input name="roleColor" />
+		</p>
+		<p>
+			<span class="convertedFirstName"></span>
+			<span data-field="address.city"></span>
+		</p>
+
+	</form>
+
+	<script type="text/javascript">
+		var person = {
+			firstName: "Jo",
+			lastName: "Proctor",
+			address: {
+				city: "Redmond"
+			},
+			roleColor: "yellow"
+		};
+
+		function set(object, name, value) {
+			var fields = name.split("."),
+				target = object,
+				field;
+			while (fields.length > 1) {
+				field = fields.shift(),
+				target = target[field];
+			}
+			target[fields[0]] = value;
+		}
+		function get(object, name) {
+			var fields = name.split("."),
+				target = object,
+				field;
+			while (fields.length > 1) {
+				field = fields.shift(),
+				target = target[field];
+			}
+			return target[fields[0]];
+		}
+
+		$("#myDeclarative").change(function(event) {
+			$.each( $(this).serializeArray(), function(index, object) {
+				//person[object.name] = object.value;
+				set(person, object.name, object.value);
+			});
+			$(person).trigger("refresh");
+		});
+		
+		$(person).bind("refresh", function() {
+			$(".roleColor").css({
+				backgroundColor: person.roleColor
+			});
+			$("[data-field]").each(function() {
+				var field = $(this).data("field");
+				//$(this).text(person[field]);
+				$(this).text(get(person, field));
+			});
+			$("input").each(function() {
+				$(this).val(get(person, this.name));
+			})
+			$(".convertedFirstName").text(person.firstName + " lives in");
+			$(".lastName").attr("title", person.firstName + " lives in " + person.address.city);
+		}).trigger("refresh");
+
+		function setNameAndColor() {
+			person.lastName = "Greenford";
+			person.firstName = "Eslpeth";
+			person.roleColor = "#8dd";
+			$(person).trigger("refresh");
+		}
+
+		function setCity() {
+			person.address.city += "Xxx";
+			$(person).trigger("refresh");
+		}
+
+	</script>
+
+	<!--Console-->
+
+	<script id="showData" type="text/x-jquery-tmpl">
+		<div>${firstName} ${lastName}</div>
+		<div>${address.city}</div>
+		<div>${roleColor}</div>
+	</script>
+
+	<br /><hr />
+	<b>Console</b>
+
+	<div id="console"></div>
+	<script type="text/javascript">
+		function showData() {
+			$( "#console" ).append("-----------------");
+			$( "#showData" ).tmpl( person ).appendTo( "#console" );
+		}
+	</script>
+
+</body>
+</html>
