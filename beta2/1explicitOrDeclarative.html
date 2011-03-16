@@ -8,46 +8,40 @@
 <body>
 	<button onclick="showData()">show data</button>
 
-	<script id="showData" type="text/x-jquery-tmpl">
-		<div>${firstName} ${lastName}</div>
-		<div>${address.city}</div>
-		<div>${roleColor}</div>
-	</script>
-
 	<button onclick="setNameAndColor()">set name and color</button>
 	<button onclick="setCity()">set city</button>
 	<hr /><br />
 
+	<h3>Declarative</h3>
+
 	<div id="myDeclarative">
-		<p data-jq-bind="css-background-color: roleColor">
-			Name: <span data-jq-bind="firstName, css-background-color: roleColor"></span> <span data-jq-bind="lastName"></span>
+		<p data-jq-linkfrom="css-background-color: roleColor">
+			Name: <span data-jq-linkfrom="firstName, css-background-color: roleColor"></span> <span data-jq-linkfrom="lastName"></span>
 		</p>
 		<p>
-			<input data-jq-link="firstName" data-jq-bind="firstName" />
-			<input data-jq-link="lastName" data-jq-bind="lastName, title: titleConvert( address.city )" />
-			<input data-jq-link="address.city" data-jq-bind="address.city" />
-			<input data-jq-link="roleColor" data-jq-bind="roleColor" />
+			<input data-jq-linkto="firstName" data-jq-linkfrom="firstName" />
+			<input data-jq-linkto="lastName" data-jq-linkfrom="lastName, title: titleConvert( address.city )" />
+			<input data-jq-linkto="address.city" data-jq-linkfrom="address.city" />
+			<input data-jq-linkto="roleColor" data-jq-linkfrom="roleColor" />
 		</p>
 		<p>
-			<span data-jq-bind="nameConvert( firstName )"></span>
-			<span data-jq-bind="address.city"></span>
+			<span data-jq-linkfrom="nameConvert( firstName )"></span>
+			<span data-jq-linkfrom="address.city"></span>
 		</p>
 
 	</div>
 
+	<hr />
+	<h3>Explicit</h3>
+
 	<div id="myExplicit">
 		<p class="cityWrapper">
-			City: <span class="city"></span>
+			City: <span data-jq-linkfrom="address.city" class="city"></span>
 		</p>
 		<p>
 			<input name="city" />
 		</p>
 	</div>
-
-	<br /><hr />
-	<b>Console</b>
-
-	<div id="console"></div>
 
 	<script type="text/javascript">
 		var person = {
@@ -58,53 +52,56 @@
 				},
 				roleColor: "yellow"
 			},
+
 			person2 = {
-				firstName: "Jo2",
-				lastName: "Proctor2",
+				firstName: "Maria",
+				lastName: "Garcia",
 				address: {
-					city: "Redmond2"
+					city: "Bellevue"
 				},
 				roleColor: "green"
 			},
+
 			person3 = {
-				firstName: "Jo3",
-				lastName: "Proctor3",
+				firstName: "Josh",
+				lastName: "Evetsky",
 				address: {
-					city: "Redmond3"
+					city: "Seattle"
 				},
 				roleColor: "red"
 			};
 
-		$.dataLink( person, "#myDeclarative" ).push();
-	
+		$.dataLink( person, "#myDeclarative" ).pushValues();
+
 		$.dataLink( "#myDeclarative", person );
-	
+
 		$.dataLink( person, person2 );
-		$.dataLink( person, person3 ).push();
-		
+
+		$.dataLink( person, person3 ).pushValues();
+
 		$.dataLink( person, "#myExplicit", [
-			{ 
+			{
 				from: "address.city",
 				to: ".city"
 			},
-			{ 
+			{
 				from: "address.city",
 				to: "input[name = city]"
 			},
-			{ 
+			{
 				from: "roleColor",
 				to: ".cityWrapper",
 				toAttr: "css-background-color"
 			},
-			{ 
+			{
 				from: "address.city",
 				to: "input[name = city]",
 				toAttr: "title",
 				convert: titleConvert
-			}		
-		]).push();
+			}
+		]).pushValues();
 
-		$.dataLink( "#myExplicit", person, { 
+		$.dataLink( "#myExplicit", person, {
 			from: "input[name = city]",
 			to: "address.city"
 		});
@@ -130,6 +127,18 @@
 
 	</script>
 
+	<!--Console-->
+
+	<script id="showData" type="text/x-jquery-tmpl">
+		<div>${firstName} ${lastName}</div>
+		<div>${address.city}</div>
+		<div>${roleColor}</div>
+	</script>
+
+	<br /><hr />
+	<b>Console</b>
+
+	<div id="console"></div>
 	<script type="text/javascript">
 		function showData() {
 			$( "#console" ).append("-----------------");

@@ -106,8 +106,8 @@
 	$.fn.extend({
 		// Use first wrapped element as template markup.
 		// Return wrapped set of template items, obtained by rendering template against data.
-		tmplToString: function( data, options, parentItem ) {
-			return $.tmplToString( this[0], data, options, parentItem );
+		tmplRender: function( data, options, parentItem ) {
+			return $.tmplRender( this[0], data, options, parentItem );
 		},
 
 		tmpl: function( data, options, parentItem ) {
@@ -127,7 +127,7 @@
 				$.dataLink( data, this, function( ev, eventArgs, to, thisMap ) {
 					switch ( eventArgs.change ) {
 						case "add":
-//							self.append( $( tmpl ).tmplToString( eventArgs.newItems, { annotate: true } ));
+//							self.append( $( tmpl ).tmplRender( eventArgs.newItems, { annotate: true } ));
 							$( tmpl ).tmpl( eventArgs.newItems ).appendTo( self );
 						break;
 					}
@@ -167,7 +167,7 @@
 
 	$.extend({
 		// Return string obtained by rendering template against data.
-		tmplToString: function( tmpl, data, options ) {
+		tmplRender: function( tmpl, data, options ) {
 			var ret = renderTemplate( tmpl, data, options );
 			itemKey = 0;
 			newTmplItems = {};  // THIS MAY BE THE CAUSE OF THE ISSUE ON MEMORY LEAK - THAT THIS IS NOT SET TO {} IN THE CASE OF tmpl(), SINCE THAT HAPPENS ON APPEND (BY DESIGN). BUT WHAT ABOUT APPEND USING TMPLPLUS?
@@ -187,7 +187,7 @@
 //		tmpl: function ( tmpl, data, options, parentItem ) {
 //			options = options || {};
 //			options.annotate = options.renderOnly ? false : (parentItem ? parentItem.annotate : true);
-//			var content = tmplToStrings( tmpl, data, options, parentItem );
+//			var content = tmplRenders( tmpl, data, options, parentItem );
 //	//	return parentItem ? content : $( options.annotate ? activate( content ) : content );
 //				return parentItem ? content : jQuery( activate( content.join("") ));
 //		},
@@ -538,11 +538,11 @@
 		var path = tmplItem.index;
 		while ( tmplItem.parent.key ) {
 			tmplItem = tmplItem.parent;
-			path = tmplItem.index + "." + path;
+			path = tmplItem.key + "." + path;
 		}
 		return path;
 	}
-	
+
 	function buildStringArray( tmplItem, content ) {
 		// Convert hierarchical content (tree of nested tmplItems) into flat string array of rendered content (optionally with attribute annotations for tmplItems)
 		return content ?

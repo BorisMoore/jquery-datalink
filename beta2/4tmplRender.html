@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<script type="text/javascript" src="http://code.jquery.com/jquery.js"></script>
+	<script src="jquery.datalink2.js" type="text/javascript"></script>
+	<script src="jquery.tmpl2.js" type="text/javascript"></script>
+	<style type="text/css">
+		table { border-collapse: collapse; }
+		td { padding: 6px; }
+		.r-o { border: 2px darkblue solid; }
+		.row1 { border: 2px darkblue solid; border-bottom: 0px; }
+		.row2 { border: 2px darkblue solid; border-top: 0px; }
+	</style>
+</head>
+<body>
+	<button onclick="showData()">show data</button>
+
+	<button onclick="setName()">set name</button>
+	<button onclick="append()">append</button>
+	<button onclick="deleteLast()">delete last row</button>
+	<hr /><br />
+
+	<h3>Editable</h3>
+	<table><tbody id="peopleGrid"></tbody></table>
+	<hr /><br />
+
+	<h3>Read-only</h3>
+	<table><tbody id="peopleGrid2"></tbody></table>
+
+	<script id="editTmpl" type="text/x-jquery-tmpl">
+		<tr class="row1">
+			<td>
+				<button class="btnDelete">X</button>
+				Name: <span data-jq-linkfrom="firstName"></span> <span data-jq-linkfrom="lastName"></span>
+			</td>
+		</tr>
+		<tr class="row2">
+			<td>
+				<input data-jq-linkto="firstName" data-jq-linkfrom="firstName" />
+				<input data-jq-linkto="lastName" data-jq-linkfrom="lastName" />
+			</td>
+		</tr>
+	</script>
+
+	<script id="readOnlyTmpl" type="text/x-jquery-tmpl">
+		<tr>
+			<td class="r-o">
+				<span data-jq-linkfrom="firstName"></span> <span data-jq-linkfrom="lastName"></span>
+			</td>
+		</tr>
+	</script>
+
+	<script type="text/javascript">
+		var people = [
+			{
+				firstName: "Jo",
+				lastName: "Proctor"
+			},
+			person2 = {
+				firstName: "Maria",
+				lastName: "Garcia"
+			},
+			person3 = {
+				firstName: "Josh",
+				lastName: "Evetsky"
+			}
+		];
+
+		$.dataLink( people, "#peopleGrid", { tmpl: "#editTmpl" }).render().pushValues();
+		$.dataLink( "#peopleGrid", people );
+
+		$.dataLink( people, "#peopleGrid2", { tmpl: "#readOnlyTmpl" }).render().pushValues();
+		$.dataLink( "#peopleGrid2", people );
+
+		$( "#peopleGrid" )
+			.delegate( ".btnDelete", "click", function() {
+
+				var index = $.viewItem( this ).index;
+				$.changeArray( people, "splice", index, 1 );
+
+			});
+
+		function setName() {
+			$.setField( people[0], "lastName", "Greenford" );
+		}
+
+		function append() {
+			$.changeArray( people, "push", {
+				firstName: "NewFirst",
+				lastName: "NewLast"
+			});
+		}
+
+		function deleteLast() {
+			$.changeArray( people, "pop" );
+		}
+
+	</script>
+
+	<!--Console-->
+
+	<script id="showData" type="text/x-jquery-tmpl">
+		<div>${firstName} ${lastName}</div>
+	</script>
+
+	<br /><hr />
+	<b>Console</b>
+
+	<div id="console"></div>
+
+	<script type="text/javascript">
+		function showData() {
+			$( "#console" ).append("-----------------");
+			$( "#console" ).append( $( "#showData" ).tmplRender( people ));
+		}
+	</script>
+
+</body>
+</html>

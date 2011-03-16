@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<script type="text/javascript" src="http://code.jquery.com/jquery.js"></script>
+	<script src="jquery.datalink2.js" type="text/javascript"></script>
+	<script src="jquery.tmpl2.js" type="text/javascript"></script>
+</head>
+<body>
+	<button onclick="showData()">show data</button>
+
+	<button onclick="setName()">set name</button>
+	<hr /><br />
+
+	<table id="myDeclarative">
+
+		<tbody><tr><td>
+
+			<h3 data-jq-linkfrom="title"></h3>
+			<input data-jq-linkto="title" data-jq-linkfrom="title" />
+
+		</td></tr></tbody>
+		<tbody data-jq-path="people">
+
+			<tr data-jq-path="0">
+				<td>
+					Name: <span data-jq-linkfrom="firstName"></span> <span data-jq-linkfrom="lastName"></span>
+				</td>
+				<td>
+					<input data-jq-linkto="firstName" data-jq-linkfrom="firstName" />
+					<input data-jq-linkto="lastName" data-jq-linkfrom="lastName" />
+				</td>
+			</tr>
+
+			<tr data-jq-path="1">
+				<td>
+					Name: <span data-jq-linkfrom="firstName"></span> <span data-jq-linkfrom="lastName"></span>
+				</td>
+				<td>
+					<input data-jq-linkto="firstName" data-jq-linkfrom="firstName" />
+					<input data-jq-linkto="lastName" data-jq-linkfrom="lastName" />
+				</td>
+			</tr>
+
+			<tr data-jq-path="2">
+				<td>
+					Name: <span data-jq-linkfrom="firstName"></span> <span data-jq-linkfrom="lastName"></span>
+				</td>
+				<td>
+					<input data-jq-linkto="firstName" data-jq-linkfrom="firstName" />
+					<input data-jq-linkto="lastName" data-jq-linkfrom="lastName" />
+				</td>
+			</tr>
+
+		</tbody>
+
+	</table>
+
+	<script type="text/javascript">
+		var myContactList = {
+				title: "My Friends",
+				people: [
+					{
+						firstName: "Jo",
+						lastName: "Proctor"
+					},
+					person2 = {
+						firstName: "Maria",
+						lastName: "Garcia"
+					},
+					person3 = {
+						firstName: "Josh",
+						lastName: "Evetsky"
+					}
+				]};
+
+		$.dataLink( myContactList, "#myDeclarative" ).pushValues();
+
+		$.dataLink( "#myDeclarative", myContactList );
+
+		function setName() {
+			$.setField( myContactList.people[0], "lastName", "Greenford" );
+		}
+
+	</script>
+
+	<!--Console-->
+
+	<script id="showData" type="text/x-jquery-tmpl">
+		<div>${firstName} ${lastName}</div>
+	</script>
+
+	<br /><hr />
+	<b>Console</b>
+
+	<div id="console"></div>
+<script type="text/javascript">
+		function showData() {
+			$( "#console" ).append("-----------------");
+			$( "#showData" ).tmpl( myContactList.people ).appendTo( "#console" );
+		}
+	</script>
+
+</body>
+</html>

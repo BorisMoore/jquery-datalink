@@ -9,6 +9,8 @@
  * Dual licensed under the MIT or GPL Version 2 licenses.
  * http://jquery.org/license
  */
+/// <reference path="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.5-vsdoc.js" />
+/// <reference path="../jquery-1.5.1.js" />
 
 (function($, undefined) {
 
@@ -19,15 +21,15 @@ var linkSettings, decl,
 		text: "text"
 	},
 
-	linkAttr = "data-jq-link",
-	bindAttr = "data-jq-bind",
+	linkAttr = "data-jq-linkto",
+	bindAttr = "data-jq-linkfrom",
 	pathAttr = "data-jq-path",
 
 	unsupported = {
 		"htmlhtml": 1,
 		"arrayobject": 1,
 		"objectarray": 1
-	},
+	}
 
 	getEventArgs = {
 		pop: function( arr, args ) {
@@ -63,7 +65,7 @@ var linkSettings, decl,
 					return { change: "add", newIndex: index, newItems: elementsToAdd };
 				}
 			} else {
-				elementsToRemove = arr.slice( index, numToRemove );
+				elementsToRemove = arr.slice( index, index + numToRemove );
 				if ( elementsToAdd.length ) {
 					return { change: "move", oldIndex: index, oldItems: elementsToRemove, newIndex: index, newItems: elementsToAdd };
 				} else {
@@ -84,11 +86,43 @@ var linkSettings, decl,
 		}
 	};
 
-function addBinding( map, from, to, callback, links ) {
+function changeArray( array, eventArgs ) {
+	var $array = $([ array ]);
+
+	switch ( eventArgs.change ) {
+		case "add":
+			array.push( eventArgs.newItems[0] ); // Todo - use concat or iterate, for inserting multiple items
+		break;
+
+		case "remove":
+			array.splice( eventArgs.oldIndex, eventArgs.oldItems.length );
+		break;
+
+		case "reset":
+		break;
+
+		case "move":
+			array.splice( eventArgs.newIndex, 0, array.splice( eventArgs.oldIndex, eventArgs.number));
+		break;
+	}
+	if ( eventArgs ) {
+		$array.triggerHandler( "arrayChange!", eventArgs );
+	}
+}
+
+function renderTmpl( el, data, tmpl ) {
+	$( el ).html(
+		$( tmpl ).tmplRender( data, { annotate: true })
+	);
+	$.dataLink( data, el, { tmpl: tmpl }).pushValues();
+	$.dataLink( el, data );
+}
+
+function addBinding( map, from, to, callback, links, viewItems ) {
 
 	// ============================
 	// Helpers for "toObject" links
-		
+
 	function setFields( sourceObj, basePath, cb ) {
 		var field, isObject, sourceVal;
 
@@ -101,17 +135,9 @@ function addBinding( map, from, to, callback, links ) {
 		}
 		return isObject || cb( sourceObj, basePath, thisMap.convert, sourceObj );
 	}
-					
-	function getLinkedPath( elem, path ) {
-		var basePath = elem.getAttribute( "data-jq-path" );
-		if ( basePath ) {
-			path = basePath + (path ? "." + path : "");
-		}
-		return elem.parentNode === fromObj ? path : getLinkedPath( elem.parentNode, path );
-	}
 
 	function convertAndSetField( val, path, cnvt, sourceObj ) {
-		path = isFromHtml ? getLinkedPath( sourceObj, path ) : path;
+		//path = isFromHtml ? getLinkedPath( sourceObj, path )[0] : path;  // TODO do we need to pass in path?
 		$.setField( toObj, path, cnvt
 			? cnvt( val, path, sourceObj, toObj, thisMap )
 			: val
@@ -119,7 +145,7 @@ function addBinding( map, from, to, callback, links ) {
 	}
 	// ============================
 	// Helper for --- TODO clean up between different cases....
-		
+
 		function findJqObject( jqObject, type ) {
 		var object, nodeName, path, linkedElems,
 			length = jqObject.length;
@@ -129,18 +155,10 @@ function addBinding( map, from, to, callback, links ) {
 			if ( object.nodeType && type !== "from") {
 				path = thisMap[ type ];
 				if ( path ) {
-
-//	TODO Replace with this style for better perf:
-//	elems = elem.getElementsByTagName("*");
-//	for ( m = elems.length - 1; m >= 0; m-- ) {
-//		processItemKey( elems[m] );
-//	}
-//	processItemKey( elem );
-
 					jqObject = jqObject.find( path ).add( jqObject.filter( path ) );  // TODO REPLACE BY ABOVE in the case of default binding, and remove support for random default binding - if perf concerns require it...
 					thisMap[ type ] = 0;
 				}
-			} else if ( length > 1 ) {
+			} else if ( !object.nodeType && length > 1 ) {
 				jqObject = $([ jqObject.get() ]); // For objects: don't wrap multiples - consider as equivalent to a jQuery object containing single object - namely the array of objects.
 			}
 		}
@@ -155,6 +173,12 @@ function addBinding( map, from, to, callback, links ) {
 		return;
 	}
 
+	if ( from.length > 1 ) {
+		from.each( function() {
+			addBinding( map, $( this ), to, callback, links );
+		});
+		return;
+	}
 	to = findJqObject( to, "to" );
 
 	var i, link, innerMap, isArray,
@@ -166,7 +190,7 @@ function addBinding( map, from, to, callback, links ) {
 		toObj = to[0],
 		toType = objectType( toObj ),
 		eventType = isFromHtml ? "change" : fromType + "Change",
-		
+
 		// TODO Verify optimization for memory footprint in closure captured by handlers, and perf optimization for using function declaration rather than statement?
 		handler = function( ev, eventArgs ) {
 			var cancel, sourceValue, sourcePath,
@@ -210,33 +234,17 @@ function addBinding( map, from, to, callback, links ) {
 
 			toHandler = {
 				"html": function() {
-					to.each( function( _, elem ) {
+					to.each( function( _, el ) {
 						var setter, targetPath , matchLinkAttr,
 							targetValue = sourceValue,
-							$target = $( elem ),
-
-							htmlArrayOperation = {
-								"add": function() {
-									$( thisMap.tmpl ).tmpl( eventArgs.newItems ).appendTo( elem );
-								},
-								"remove": function() {
-								},
-								"reset": function() {
-								},
-								"move": function() {
-									return target.splice( args[ 2 ], 0, target.splice( args[ 0 ], args[ 1 ]));
-								}
-							};
+							$target = $( el ),
+							viewItems = $.data( el, "jsViewItems" );
 
 						function setTarget( all, attr, toPath, convert, toPathWithConvert ) {
 							attr = attr || thisMap.toAttr;
 							toPath = toPath || toPathWithConvert;
 							convert = window[ convert ] || thisMap.convert; // TODO support for named converters
 
-// Not currently supported
-//if ( isFromHtml ) {
-//	matchLinkAttr = (toPath === decl.getLinkInfo( source ));
-//} else {
 							matchLinkAttr = (!sourcePath || sourcePath === toPath );
 							if ( !eventArgs ) {
 								// This is triggered by trigger(), and there is no thisMap.from specified,
@@ -248,11 +256,11 @@ function addBinding( map, from, to, callback, links ) {
 							// so only modify target elements which have a corresponding target path.
 							if ( targetValue !== undefined && matchLinkAttr) {
 								if ( convert && $.isFunction( convert )) {
-									targetValue = convert( targetValue, source, sourcePath, elem, thisMap );
+									targetValue = convert( targetValue, source, sourcePath, el, thisMap );
 								}
 								if ( !attr ) {
 									// Merge in the default attribute bindings for this target element
-									attr = linkSettings.merge[ elem.nodeName.toLowerCase() ];
+									attr = linkSettings.merge[ el.nodeName.toLowerCase() ];
 									attr = attr? attr.to.toAttr : "text";
 								}
 
@@ -272,8 +280,9 @@ function addBinding( map, from, to, callback, links ) {
 						}
 
 						if ( fromType === "array" ) {
-							if ( thisMap.tmpl) {
-								htmlArrayOperation[ eventArgs.change ]();
+							if ( eventArgs ) {
+								//htmlArrayOperation[ eventArgs.change ](); // TODO support incremental rendering for different operations
+								renderTmpl( el, source, map.tmpl );
 							}
 						} else {
 							// Find path using thisMap.from, or if not specified, use declarative specification
@@ -282,9 +291,9 @@ function addBinding( map, from, to, callback, links ) {
 							if ( targetPath ) {
 								setTarget( "", "", targetPath );
 							} else {
-								var tmplItem = $.tmplItem && $.tmplItem( elem );
+								var tmplItem = $.tmplItem && $.tmplItem( el );
 								if ( !(tmplItem && tmplItem.key) || (tmplItem.data === source )) {
-									decl.applyBindInfo( elem, setTarget );
+									decl.applyBindInfo( el, setTarget );
 								}
 							}
 						}
@@ -305,16 +314,16 @@ function addBinding( map, from, to, callback, links ) {
 						// such objects are not linked so this would not trigger events on them. For deep copying without triggering events, use $.extend.
 						setFields( source, "", convertAndSetField );
 					} else { // from html. (Mapping from array to object not supported)
-
-//						var tmplItem = $.tmplItem && $.tmplItem( source );
-//						if ( !(tmplItem && tmplItem.key) || (tmplItem.data === toObj )) {
-						
 						decl.applyLinkInfo( source, function(all, path, declCnvt){
 							// TODO support for named converters
-							convertAndSetField( sourceValue, path, window[ declCnvt ] || convert, source );
-						});
+							var cnvt = window[ declCnvt ] || convert,
+								viewItem = $.viewItem( source );
 
-//						}
+							$.setField( viewItem.data, path, cnvt
+								? cnvt( sourceValue, path, source, viewItem.data, thisMap )
+								: sourceValue
+							);
+						});
 					}
 				},
 				"array": function() {
@@ -332,16 +341,7 @@ function addBinding( map, from, to, callback, links ) {
 					}
 				}
 			};
-//getEventArgs.splice( toObj )
-//$.changeArray( toObj, "splice", 0, toObj.length, eventArgs || {
-//	change: "move",
-//	oldIndex: toObj.length,
-//	oldItems: toObj,
-//	newIndex: fromObj.length,
-//	newItems: $.map(fromObj, function( obj ){
-//		return $.extend(true, {}, obj);
-//	})
-//});
+
 			fromHandler[ fromType ]();
 
 			if ( !callback || !(cancel = callback.call( thisMap, ev, eventArgs, to, thisMap ) === false )) {
@@ -353,9 +353,9 @@ function addBinding( map, from, to, callback, links ) {
 				ev.stopImmediatePropagation();
 			}
 		};
-		
+
 		var j, l;
-		
+
 		switch ( fromType + toType ) {
 			case "htmlarray" :
 				for ( j=0, l=toObj.length; j<l; j++ ) {
@@ -364,36 +364,51 @@ function addBinding( map, from, to, callback, links ) {
 			break;
 
 			case "arrayhtml" :
-				from.bind( eventType, handler );
-				for ( j=0, l=fromObj.length; j<l; j++ ) {
-					addBinding( thisMap, $( fromObj[j] ), to, callback, links );
+				if ( thisMap.decl ) {
+
+					to.each( function( _, el ) {
+						var path, item;
+
+						viewItems = viewItems || setViewItems( el, fromObj );
+
+						for ( path in viewItems ) {
+							if ( path ) {
+								item = viewItems[ path ];
+								addBinding( map, $( item.data ), $( item.nodes ), callback, links, getNestedItems( viewItems, path ) );
+							}
+						}
+					});
 				}
+				from.bind( eventType, handler );
 			break;
 
 			case "objecthtml" :
+				var bind = [];
 				if ( thisMap.decl ) {
-					to = to.find( "[ data-jq-bind ]" ).add( to.filter( "[ data-jq-bind ]" ) ); 
-				//	thisMap.to = 0;
+
+					to.each( function( _, el ) {
+						var path, item;
+
+						//if ( !$.data( el, "jsViewItems", items );
+
+						viewItems = viewItems || setViewItems( el, fromObj );
+
+						for ( path in viewItems ) {
+							if ( path ) {
+								item = viewItems[ path ];
+								addBinding( map, $( item.data ), $( item.nodes ), callback, links, getNestedItems( viewItems, path ) );
+							}
+						}
+						bind = bind.concat( viewItems[""].bind );
+					});
+					to = $( bind );
 				}
-//	TODO Replace with this style for better perf:
-//	elems = elem.getElementsByTagName("*");
-//	for ( m = elems.length - 1; m >= 0; m-- ) {
-//		processItemKey( elems[m] );
-//	}
-//	processItemKey( elem );
 				from.bind( eventType, handler );
 			break;
 
 			default:
 				from.bind( eventType, handler );
 		}
-
-//	if ( fromType === "array" && toType === "html" ) {
-//		for ( var j=0, l=fromObj.length; j<l; j++ ) {
-//			// This can probably be optimized by removing redundant data-jq-item annotations and leaving only top-level ones for each template item.
-//			addBinding( thisMap, $(fromObj[ j ]), to.filter("[data-jq-item=" + j + "]"), callback, links );
-//		}
-//	}
 
 	links.push({
 		handler: handler,
@@ -418,10 +433,81 @@ function addBinding( map, from, to, callback, links ) {
 	}
 }
 
-
 // ============================
 // Helpers
-		
+function getNestedItems( parentItems, basePath ) {
+	var items = {}, l=basePath.length;
+	for ( var path in parentItems ) {
+		if ( path.indexOf( basePath ) === 0 ) {
+			items[ path.slice( l )] = parentItems[ path ];
+		}
+	}
+	return items;
+}
+function setViewItems( root, object ) {
+	// If bound add to nodes. If new path create new item, if prev path add to prev item. (LATER WILL ADD TEXT SIBLINGS). If bound add to prev item bindings.
+	// Walk all elems. Find bound elements. Look up parent chain.
+
+	var nodes, bind, prevPath, prevNode, item, elems, i, l,
+		items = {};
+
+	function addItem( path, basePath ) {
+		item = {
+			path: path,
+			nodes: [],
+			bind: []
+		};
+
+		if ( basePath !== undefined ) {
+			item.data = getPathObject( items[ basePath ].data, path )
+			if ( basePath ) {
+				path = basePath + "."  + path;
+			}
+	//		item.parentPath = basePath; // Alternative
+			item.parent = items[ basePath ];
+			if ( $.isArray( item.parent.data )) {
+				item.index = parseInt( path );
+			}
+		} else {
+			item.data = object;
+		}
+		bind = item.bind;
+		nodes = item.nodes;
+		items[ path ] = item;
+	}
+
+	function processElem( el ) {
+		var path = el.getAttribute( pathAttr ),
+			binding = el.getAttribute( bindAttr );
+
+		if ( path ) {
+			if ( path !== prevPath ) {
+				prevPath = path;
+				addItem( path, getLinkedPath( el.parentNode )[0]);
+			}
+			nodes.push( prevNode = el );
+		} else if ( el.previousSibling === prevNode ) {
+			el.setAttribute( pathAttr, prevPath );
+			nodes.push( prevNode = el );
+		}
+		if ( binding ) {
+			bind.push( el );
+		}
+	}
+
+	addItem( "" );
+
+	$.data( root, "jsViewItems", items );
+
+	// Walk all elems. Find bound elements. Look up parent chain.
+	elems = root.getElementsByTagName( "*" );
+	for ( i = 0, l = elems.length; i < l; i++ ) {
+		processElem( elems[ i ]);
+	}
+
+	return items;
+}
+
 function objectType( object ) {
 	return object
 		? object.nodeType
@@ -446,6 +532,19 @@ function getField( object, path ) {
 	}
 }
 
+function getLinkedPath( el ) {
+	var path, result = [];
+	// TODO Do we need basePath? If so, result = basePath ? [ basePath ] : []'
+	while ( !$.data( el, "jsViewItems" )) {
+		if ( path = el.getAttribute( "data-jq-path" )) {
+			result.unshift( path );
+		}
+		el = el.parentNode;
+	}
+	return [ result.join( "." ), el ];
+}
+
+
 function getLeafObject( object, path ) {
 	if ( object && path ) {
 		var parts = path.split(".");
@@ -459,46 +558,35 @@ function getLeafObject( object, path ) {
 	return [];
 }
 
-function changeArray( array, eventArgs ) {
-	var ret, $array = $([ array ]),
-		arrayOperation = {
-			"add": function() {
-				array.push( eventArgs.newItems[0] ); // Todo - use concat or iterate, for inserting multiple items
-			},
-			"remove": function() {
-			},
-			"reset": function() {
-			},
-			"move": function() {
-				return array.splice( eventArgs.newIndex, 0, array.splice( eventArgs.oldIndex, eventArgs.number));
-			}
-		};
-
-	if ( eventArgs ) {
-		ret = arrayOperation[ eventArgs.change ]();
-		$array.triggerHandler( "arrayChange!", eventArgs );
-	} else {
-		// this is a trigger
+function getPathObject( object, path ) {
+	if ( object && path ) {
+		var parts = path.split(".");
+		while ( object && parts.length ) {
+			object = object[ parts.shift() ];
+		}
+		return object;
 	}
-	return ret;
 }
+
 // ============================
 
 $.extend({
 	dataLink: function( from, to, maps, callback ) {
 		var args = $.makeArray( arguments ),
 			l = args.length - 1;
+
 		if ( !callback && $.isFunction( args[ l ])) {
 			// Last argument is a callback.
 			// So make it the fourth parameter (our named callback parameter)
 			args[3] = args.pop();
 			return $.dataLink.apply( $, args );
 		}
-		var i, fromType, toType,
+
+		var i, fromType, toType, tmpl,
 			links = [],
 			linkset = {   // TODO Consider exposing as prototype, for extension
 				links: links,
-				push: function() {
+				pushValues: function() {
 					var link, i = 0, l = links.length;
 					while ( l-- ) {
 						link = links[ l ];
@@ -511,6 +599,13 @@ $.extend({
 							});
 						}
 					}
+					return linkset;
+				},
+				render: function() {
+					var topLink = linkset.links[0];
+					topLink.to.each( function() {
+						renderTmpl( this, topLink.from[0], topLink.map.tmpl );
+					});
 					return linkset;
 				},
 				unlink: function() {
@@ -528,12 +623,16 @@ $.extend({
 			to = wrapObject( to );
 			fromType = objectType( from[ 0 ]);
 			toType = objectType( to[ 0 ]);
-			maps = maps 
-				|| !unsupported[ fromType + toType ] 
-				&& { 
-					decl: true,  
-					from: fromType === "html" ? "input[" + linkAttr + "]" : undefined//,
-		//			to: toType === "html" ? "[" + bindAttr + "]" : undefined
+			tmpl = (toType === "html" && maps && maps.tmpl);
+			if ( tmpl ) {
+				maps = undefined;
+			}
+			maps = maps
+				|| !unsupported[ fromType + toType ]
+				&& {
+					decl: true,
+					tmpl: tmpl,
+					from: fromType === "html" ? "input[" + linkAttr + "]" : undefined
 				};
 
 			if ( maps ) {
@@ -571,6 +670,11 @@ $.extend({
 	getField: function( object, path ) {
 		return getField( object, path );
 	},
+	viewItem: function( el ) {
+		var path = getLinkedPath( el ),
+		items = $.data( path[1], "jsViewItems" );
+		return items[ path[0]];
+	},
 
 	// operations: pop push reverse shift sort splice unshift move
 	changeArray: function( array, operation ) {
@@ -584,20 +688,20 @@ $.extend({
 			linkAttr: linkAttr,
 			bindAttr: bindAttr,
 			pathAttr: pathAttr,
-			applyLinkInfo: function( elem, setTarget ){
-				var linkInfo = elem.getAttribute( decl.linkAttr );
+			applyLinkInfo: function( el, setTarget ){
+				var linkInfo = el.getAttribute( decl.linkAttr );
 				if ( linkInfo !== null ) {
 									//  toPath:          convert     end
 					linkInfo.replace( /([\w\.]*)(?:\:\s*(\w+)\(\)\s*)?$/, setTarget );
 				}
 //lastName:convert1()
 //	Alternative using name attribute:
-//	return elem.getAttribute( decl.linkAttr ) || (elem.name && elem.name.replace( /\[(\w+)\]/g, function( all, word ) {
+//	return el.getAttribute( decl.linkAttr ) || (el.name && el.name.replace( /\[(\w+)\]/g, function( all, word ) {
 //		return "." + word;
 //	}));
 			},
-			applyBindInfo: function( elem, setTarget ){
-				var bindInfo = elem.getAttribute( decl.bindAttr );
+			applyBindInfo: function( el, setTarget ){
+				var bindInfo = el.getAttribute( decl.bindAttr );
 				if ( bindInfo !== null ) {
 										// toAttr:               toPath    convert(  toPath  )        end
 					bindInfo.replace( /(?:([\w\-]+)\:\s*)?(?:(?:([\w\.]+)|(\w+)\(\s*([\w\.]+)\s*\))(?:$|,))/g, setTarget );
