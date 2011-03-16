@@ -15,7 +15,7 @@
 <body>
 	<button onclick="showData()">show data</button>
 
-	<button onclick="setName()">set name</button>
+	<button onclick="setLastName()">set last name</button>
 	<button onclick="append()">append</button>
 	<button onclick="deleteLast()">delete last row</button>
 	<hr /><br />
@@ -80,8 +80,10 @@
 
 			});
 
-		function setName() {
-			$.setField( people[0], "lastName", "Greenford" );
+		function setLastName() {
+			if ( people.length ) {
+				$.setField( people[ people.length - 1 ], "lastName", "NewLastName" );
+			}
 		}
 
 		function append() {

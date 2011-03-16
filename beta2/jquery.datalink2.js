@@ -477,7 +477,8 @@ function setViewItems( root, object ) {
 	}
 
 	function processElem( el ) {
-		var path = el.getAttribute( pathAttr ),
+		var node =  el,
+			path = el.getAttribute( pathAttr ),
 			binding = el.getAttribute( bindAttr );
 
 		if ( path ) {
@@ -486,9 +487,12 @@ function setViewItems( root, object ) {
 				addItem( path, getLinkedPath( el.parentNode )[0]);
 			}
 			nodes.push( prevNode = el );
-		} else if ( el.previousSibling === prevNode ) {
-			el.setAttribute( pathAttr, prevPath );
-			nodes.push( prevNode = el );
+		} else {
+			while ( (node = node.previousSibling) && node.nodeType !== 1 ) {} // TODO Later support intermediate text nodes
+			if ( node === prevNode ) {
+				el.setAttribute( pathAttr, prevPath );
+				nodes.push( prevNode = el );
+			}
 		}
 		if ( binding ) {
 			bind.push( el );
