@@ -110,12 +110,16 @@ function changeArray( array, eventArgs ) {
 	}
 }
 
+var prevLinksFrom, prevLinksTo;
+
 function renderTmpl( el, data, tmpl ) {
 	$( el ).html(
 		$( tmpl ).tmplRender( data, { annotate: true })
 	);
-	$.dataLink( data, el, { tmpl: tmpl }).pushValues();
-	$.dataLink( el, data );
+	prevLinksFrom && prevLinksFrom.unlink();
+	prevLinksTo && prevLinksTo.unlink();
+	prevLinksFrom = $.dataLink( data, el, { tmpl: tmpl }).pushValues();
+	prevLinksTo = $.dataLink( el, data );
 }
 
 function addBinding( map, from, to, callback, links, viewItems ) {
