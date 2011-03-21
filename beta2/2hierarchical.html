@@ -11,7 +11,7 @@
 	<button onclick="setName()">set name</button>
 	<hr /><br />
 
-	<table id="myDeclarative">
+	<table id="myDeclarative" data-jq-tmpl="contactListTmpl">
 
 		<tbody><tr><td>
 
@@ -19,9 +19,9 @@
 			<input data-jq-linkto="title" data-jq-linkfrom="title" />
 
 		</td></tr></tbody>
-		<tbody data-jq-path="people">
+		<tbody data-jq-path="people" data-jq-tmpl="personTmpl">
 
-			<tr data-jq-path="0">
+			<tr data-jq-path="">
 				<td>
 					Name: <span data-jq-linkfrom="firstName"></span> <span data-jq-linkfrom="lastName"></span>
 				</td>
@@ -31,7 +31,7 @@
 				</td>
 			</tr>
 
-			<tr data-jq-path="1">
+			<tr data-jq-path="">
 				<td>
 					Name: <span data-jq-linkfrom="firstName"></span> <span data-jq-linkfrom="lastName"></span>
 				</td>
@@ -41,7 +41,7 @@
 				</td>
 			</tr>
 
-			<tr data-jq-path="2">
+			<tr data-jq-path="">
 				<td>
 					Name: <span data-jq-linkfrom="firstName"></span> <span data-jq-linkfrom="lastName"></span>
 				</td>

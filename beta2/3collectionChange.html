@@ -22,37 +22,37 @@
 
 	<table id="peopleGrid">
 	<tbody>
-		<tr class="row1" data-jq-path="0">
+		<tr class="row1" data-jq-path="">
 			<td>
 				<button class="btnDelete">X</button>
 				Name: <span data-jq-linkfrom="firstName"></span> <span data-jq-linkfrom="lastName"></span>
 			</td>
 		</tr>
-		<tr class="row2" data-jq-path="0">
+		<tr class="row2">
 			<td>
 				<input data-jq-linkto="firstName" data-jq-linkfrom="firstName" />
 				<input data-jq-linkto="lastName" data-jq-linkfrom="lastName" />
 			</td>
 		</tr>
-		<tr class="row1" data-jq-path="1">
+		<tr class="row1" data-jq-path="">
 			<td>
 				<button class="btnDelete">X</button>
 				Name: <span data-jq-linkfrom="firstName"></span> <span data-jq-linkfrom="lastName"></span>
 			</td>
 		</tr>
-		<tr class="row2" data-jq-path="1">
+		<tr class="row2">
 			<td>
 				<input data-jq-linkto="firstName" data-jq-linkfrom="firstName" />
 				<input data-jq-linkto="lastName" data-jq-linkfrom="lastName" />
 			</td>
 		</tr>
-		<tr class="row1" data-jq-path="2">
+		<tr class="row1" data-jq-path="">
 			<td>
 				<button class="btnDelete">X</button>
 				Name: <span data-jq-linkfrom="firstName"></span> <span data-jq-linkfrom="lastName"></span>
 			</td>
 		</tr>
-		<tr class="row2" data-jq-path="2">
+		<tr class="row2">
 			<td>
 				<input data-jq-linkto="firstName" data-jq-linkfrom="firstName" />
 				<input data-jq-linkto="lastName" data-jq-linkfrom="lastName" />
@@ -92,14 +92,14 @@
 			}
 		];
 
-		$.dataLink( people, "#peopleGrid", { tmpl: "#personTmpl" }).pushValues();
+		var savedlinks = $.dataLink( people, "#peopleGrid", "#personTmpl" ).pushValues();
 
 		$.dataLink( "#peopleGrid", people );
 
 		$( "#peopleGrid" )
 			.delegate( ".btnDelete", "click", function() {
-
-				var index = $.viewItem( this ).index;
+				var item = $.viewItem( this ),
+					index = $.inArray( item.data, item.parent.data );
 				$.changeArray( people, "splice", index, 1 );
 
 			});

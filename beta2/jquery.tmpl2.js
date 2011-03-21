@@ -535,12 +535,13 @@
 	}
 
 	function getTmplItemPath( tmplItem ) {
-		var path = tmplItem.index;
-		while ( tmplItem.parent.key ) {
-			tmplItem = tmplItem.parent;
-			path = tmplItem.key + "." + path;
-		}
-		return path;
+//		var path = tmplItem.index;
+//		while ( tmplItem.parent.key ) {
+//			tmplItem = tmplItem.parent;
+//			path = tmplItem.key + "." + path;
+//		}
+//		return path;
+return "";
 	}
 
 	function buildStringArray( tmplItem, content ) {

@@ -66,18 +66,23 @@
 			}
 		];
 
-		$.dataLink( people, "#peopleGrid", { tmpl: "#editTmpl" }).render().pushValues();
+		$( "#peopleGrid" ).html(
+			$( "#editTmpl" ).tmplRender( people, { annotate: true })
+		);
+		$.dataLink( people, "#peopleGrid", "#editTmpl" ).pushValues();
 		$.dataLink( "#peopleGrid", people );
 
-		$.dataLink( people, "#peopleGrid2", { tmpl: "#readOnlyTmpl" }).render().pushValues();
+		$( "#peopleGrid2" ).html(
+			$( "#readOnlyTmpl" ).tmplRender( people, { annotate: true })
+		);
+		$.dataLink( people, "#peopleGrid2","#readOnlyTmpl" ).pushValues();
 		$.dataLink( "#peopleGrid2", people );
 
 		$( "#peopleGrid" )
 			.delegate( ".btnDelete", "click", function() {
-
-				var index = $.viewItem( this ).index;
+				var item = $.viewItem( this ),
+					index = $.inArray( item.data, item.parent.data );
 				$.changeArray( people, "splice", index, 1 );
-
 			});
 
 		function setLastName() {

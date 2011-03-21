@@ -110,19 +110,14 @@ function changeArray( array, eventArgs ) {
 	}
 }
 
-var prevLinksFrom, prevLinksTo;
-
 function renderTmpl( el, data, tmpl ) {
 	$( el ).html(
 		$( tmpl ).tmplRender( data, { annotate: true })
 	);
-	prevLinksFrom && prevLinksFrom.unlink();
-	prevLinksTo && prevLinksTo.unlink();
-	prevLinksFrom = $.dataLink( data, el, { tmpl: tmpl }).pushValues();
-	prevLinksTo = $.dataLink( el, data );
+//	var viewInfo = $.data( el, "_jqDataLink" );
 }
 
-function addBinding( map, from, to, callback, links, viewItems ) {
+function addBinding( map, from, to, callback, links, addViewItems, viewItem ) {
 
 	// ============================
 	// Helpers for "toObject" links
@@ -130,14 +125,16 @@ function addBinding( map, from, to, callback, links, viewItems ) {
 	function setFields( sourceObj, basePath, cb ) {
 		var field, isObject, sourceVal;
 
-		for ( field in sourceObj ) {
-			isObject = 1;
-			sourceVal = sourceObj[ field ];
-			if ( sourceObj.hasOwnProperty(field) && !( $.isFunction( sourceVal ) || sourceVal.toJSON)) {
-				setFields( sourceVal, (basePath ? basePath + "." : basePath) + field, cb );
+		if ( typeof sourceObj === "object" ) {
+			for ( field in sourceObj ) {
+				sourceVal = sourceObj[ field ];
+				if ( sourceObj.hasOwnProperty(field) && !$.isFunction( sourceVal ) && !( typeof sourceVal === "object" && sourceVal.toJSON )) {
+					setFields( sourceVal, (basePath ? basePath + "." : basePath) + field, cb );
+				}
 			}
+		} else {
+			cb( sourceObj, basePath, thisMap.convert, sourceObj )
 		}
-		return isObject || cb( sourceObj, basePath, thisMap.convert, sourceObj );
 	}
 
 	function convertAndSetField( val, path, cnvt, sourceObj ) {
@@ -150,50 +147,18 @@ function addBinding( map, from, to, callback, links, viewItems ) {
 	// ============================
 	// Helper for --- TODO clean up between different cases....
 
-		function findJqObject( jqObject, type ) {
-		var object, nodeName, path, linkedElems,
-			length = jqObject.length;
-
-		if ( length ) {
-			object = jqObject[0];
-			if ( object.nodeType && type !== "from") {
-				path = thisMap[ type ];
-				if ( path ) {
-					jqObject = jqObject.find( path ).add( jqObject.filter( path ) );  // TODO REPLACE BY ABOVE in the case of default binding, and remove support for random default binding - if perf concerns require it...
-					thisMap[ type ] = 0;
-				}
-			} else if ( !object.nodeType && length > 1 ) {
-				jqObject = $([ jqObject.get() ]); // For objects: don't wrap multiples - consider as equivalent to a jQuery object containing single object - namely the array of objects.
-			}
-		}
-		return jqObject;
-	}
-	// ============================
-
-	var	thisMap = typeof map === "string" ? { to: map } : map && $.extend( {}, map );  // Note: "string" corresponds to 'to'. Is this intuitive? It is useful for filtering object copy: $.link( person, otherPerson, ["lastName", "address.city"] );
-
-	from = findJqObject( from, "from" );
-	if ( !from ) {
-		return;
-	}
-
-	if ( from.length > 1 ) {
-		from.each( function() {
-			addBinding( map, $( this ), to, callback, links );
-		});
-		return;
-	}
-	to = findJqObject( to, "to" );
-
-	var i, link, innerMap, isArray,
+	var	j, l, link, innerMap, isArray, path, item, items,
+		thisMap = typeof map === "string" ? { to: thisMap } : map && $.extend( {}, map ),
+	// Note: "string" corresponds to 'to'. Is this intuitive? It is useful for filtering object copy: $.link( person, otherPerson, ["lastName", "address.city"] );
+		tmpl = thisMap.tmpl,
 		fromPath = thisMap.from,
 		fromObj = from[0],
-		fromType = objectType( fromObj ),
+		fromType = objectType( from ),
+		toType = objectType( to ),
 		isFromHtml = (fromType === "html"),
-		isToHtml = (toType === "html"),
 		toObj = to[0],
-		toType = objectType( toObj ),
 		eventType = isFromHtml ? "change" : fromType + "Change",
+
 
 		// TODO Verify optimization for memory footprint in closure captured by handlers, and perf optimization for using function declaration rather than statement?
 		handler = function( ev, eventArgs ) {
@@ -216,7 +181,7 @@ function addBinding( map, from, to, callback, links, viewItems ) {
 				},
 				"object": function() {
 					// For objectChange events, eventArgs provides the path (name), and value of the changed field
-					var mapFrom = thisMap.from || !isToHtml && thisMap.to;
+					var mapFrom = thisMap.from || (toType !== "html") && thisMap.to;
 					if ( eventArgs ) {
 						sourceValue = eventArgs.value;
 						sourcePath = eventArgs.path;
@@ -241,8 +206,7 @@ function addBinding( map, from, to, callback, links, viewItems ) {
 					to.each( function( _, el ) {
 						var setter, targetPath , matchLinkAttr,
 							targetValue = sourceValue,
-							$target = $( el ),
-							viewItems = $.data( el, "jsViewItems" );
+							$target = $( el );
 
 						function setTarget( all, attr, toPath, convert, toPathWithConvert ) {
 							attr = attr || thisMap.toAttr;
@@ -286,7 +250,8 @@ function addBinding( map, from, to, callback, links, viewItems ) {
 						if ( fromType === "array" ) {
 							if ( eventArgs ) {
 								//htmlArrayOperation[ eventArgs.change ](); // TODO support incremental rendering for different operations
-								renderTmpl( el, source, map.tmpl );
+								renderTmpl( el, source, thisMap.tmpl );
+								$.dataLink( source, el, thisMap.tmpl ).pushValues();
 							}
 						} else {
 							// Find path using thisMap.from, or if not specified, use declarative specification
@@ -295,8 +260,8 @@ function addBinding( map, from, to, callback, links, viewItems ) {
 							if ( targetPath ) {
 								setTarget( "", "", targetPath );
 							} else {
-								var tmplItem = $.tmplItem && $.tmplItem( el );
-								if ( !(tmplItem && tmplItem.key) || (tmplItem.data === source )) {
+								viewItem = viewItem || $.viewItem( el );
+								if ( !viewItem || viewItem.data === source ) {
 									decl.applyBindInfo( el, setTarget );
 								}
 							}
@@ -320,8 +285,9 @@ function addBinding( map, from, to, callback, links, viewItems ) {
 					} else { // from html. (Mapping from array to object not supported)
 						decl.applyLinkInfo( source, function(all, path, declCnvt){
 							// TODO support for named converters
-							var cnvt = window[ declCnvt ] || convert,
-								viewItem = $.viewItem( source );
+							var cnvt = window[ declCnvt ] || convert;
+
+							viewItem = $.viewItem( source );
 
 							$.setField( viewItem.data, path, cnvt
 								? cnvt( sourceValue, path, source, viewItem.data, thisMap )
@@ -356,71 +322,58 @@ function addBinding( map, from, to, callback, links, viewItems ) {
 			if ( cancel ) {
 				ev.stopImmediatePropagation();
 			}
+		},
+
+		link = {
+			handler: handler,
+			from: from,
+			to: to,
+			map: thisMap,
+			type: eventType
 		};
 
-		var j, l;
-
-		switch ( fromType + toType ) {
-			case "htmlarray" :
-				for ( j=0, l=toObj.length; j<l; j++ ) {
-					addBinding( thisMap, from, $( toObj[j] ), callback, links );
-				}
-			break;
-
-			case "arrayhtml" :
-				if ( thisMap.decl ) {
-
-					to.each( function( _, el ) {
-						var path, item;
-
-						viewItems = viewItems || setViewItems( el, fromObj );
-
-						for ( path in viewItems ) {
-							if ( path ) {
-								item = viewItems[ path ];
-								addBinding( map, $( item.data ), $( item.nodes ), callback, links, getNestedItems( viewItems, path ) );
-							}
-						}
-					});
-				}
-				from.bind( eventType, handler );
-			break;
-
-			case "objecthtml" :
-				var bind = [];
-				if ( thisMap.decl ) {
-
-					to.each( function( _, el ) {
-						var path, item;
-
-						//if ( !$.data( el, "jsViewItems", items );
-
-						viewItems = viewItems || setViewItems( el, fromObj );
-
-						for ( path in viewItems ) {
-							if ( path ) {
-								item = viewItems[ path ];
-								addBinding( map, $( item.data ), $( item.nodes ), callback, links, getNestedItems( viewItems, path ) );
-							}
-						}
-						bind = bind.concat( viewItems[""].bind );
-					});
-					to = $( bind );
-				}
-				from.bind( eventType, handler );
-			break;
-
-			default:
-				from.bind( eventType, handler );
+	if ( addViewItems && thisMap.decl ) {
+		items = setViewItems( toObj, from[ 0 ], thisMap, callback, links );
+		viewItem = items[0];
+		for ( j=1, l = items.length; j < l; j++ ) {
+			item = items[ j ];
+			addBinding( thisMap, $( item.data ), $( item.bind ), callback, links, false, item );
 		}
+		//DO object bindings on returned content- since now  bindings are added to items.
+	}
 
-	links.push({
-		handler: handler,
-		from: from,
-		to: to,
-		map: thisMap,
-		type: eventType
-	});
+	switch ( fromType + toType ) {
+		case "htmlarray" :
+			for ( j=0, l=toObj.length; j<l; j++ ) {
+				addBinding( thisMap, from, $( toObj[j] ), callback, links );
+			}
+			return; // Don't add link since not adding binding
+		break;
+
+		case "objecthtml" :
+			if ( viewItem ) {
+				if ( viewItem.bind ) {
+					to = $( viewItem.bind );
+					viewItem.handler = handler;
+				} else  {
+					return;
+				}
+			}
+		break;
+
+		case "arrayhtml" :
+//			item = $.data( toObj, "_jsViewItem" );
+			if ( viewItem ) {
+				if ( viewItem.handler ) {
+					return;
+				}
+				viewItem.handler = handler;
+			}
+	}
+// Store binding on html element, and override clean, to unbind from object or array. Also, if possible, remove from return linkset??
+	from.bind( eventType, handler );
+
+	links.push( link );
 
 	// If from an object and the 'from' path points to a field of a descendant 'leaf object',
 	// bind not only from leaf object, but also from intermediate objects
@@ -448,75 +401,85 @@ function getNestedItems( parentItems, basePath ) {
 	}
 	return items;
 }
-function setViewItems( root, object ) {
+
+function setViewItems( root, object, map, callback, links ) {
 	// If bound add to nodes. If new path create new item, if prev path add to prev item. (LATER WILL ADD TEXT SIBLINGS). If bound add to prev item bindings.
 	// Walk all elems. Find bound elements. Look up parent chain.
 
-	var nodes, bind, prevPath, prevNode, item, elems, i, l,
-		items = {};
+	var nodes, bind, prevPath, prevNode, item, elems, i, l, index = 0;
+		items = [];
 
-	function addItem( path, basePath ) {
+	function addItem( el, path ) {
+		var parent;
+		bind = [];
+		nodes = [];
+		if ( path ) {
+			index = 0;
+		} else if ( path !== undefined ) {
+			path = "" + index++;
+		}
+		unbindLinkedElem( el );
 		item = {
 			path: path,
-			nodes: [],
-			bind: []
+			nodes: nodes,
+			bind: bind
 		};
 
-		if ( basePath !== undefined ) {
-			item.data = getPathObject( items[ basePath ].data, path )
-			if ( basePath ) {
-				path = basePath + "."  + path;
-			}
-	//		item.parentPath = basePath; // Alternative
-			item.parent = items[ basePath ];
-			if ( $.isArray( item.parent.data )) {
-				item.index = parseInt( path );
-			}
-		} else {
+		if ( path === undefined ) {
 			item.data = object;
+		} else {
+			item.parent = parent = $.viewItem( el );
+			item.data = getPathObject( parent.data, path );
 		}
-		bind = item.bind;
-		nodes = item.nodes;
-		items[ path ] = item;
+		items.push( item );
+		item = $.data( el, "_jsViewItem", item );
 	}
 
 	function processElem( el ) {
-		var node =  el,
+		var node = prevNode = el,
 			path = el.getAttribute( pathAttr ),
 			binding = el.getAttribute( bindAttr );
-
-		if ( path ) {
-			if ( path !== prevPath ) {
-				prevPath = path;
-				addItem( path, getLinkedPath( el.parentNode )[0]);
+		if ( el.parentNode === prevNode ) {
+			index = -1;
+		}
+ 		if ( path !== null ) {
+			addItem( el, path );
+			nodes.push( node );
+			while ( node = node.nextSibling ) {
+				if ( node.nodeType === 1 ) {
+					if ( node.getAttribute( pathAttr ) === null ) {
+						$.data( node, "_jsViewItem", item );
+					} else {
+						break;
+					}
+				}
+				nodes.push( node );
 			}
-			nodes.push( prevNode = el );
-		} else {
-			while ( (node = node.previousSibling) && node.nodeType !== 1 ) {} // TODO Later support intermediate text nodes
-			if ( node === prevNode ) {
-				el.setAttribute( pathAttr, prevPath );
-				nodes.push( prevNode = el );
-			}
+			// TODO Later support specifying preceding text nodes
 		}
 		if ( binding ) {
 			bind.push( el );
 		}
 	}
 
-	addItem( "" );
+	addItem( root );
 
-	$.data( root, "jsViewItems", items );
+//	$.data( root, "_jqDataLink", { viewItems: items,  });
 
-	// Walk all elems. Find bound elements. Look up parent chain.
-	elems = root.getElementsByTagName( "*" );
-	for ( i = 0, l = elems.length; i < l; i++ ) {
-		processElem( elems[ i ]);
+	if ( map.decl ) {
+		// Walk all elems. Find bound elements. Look up parent chain.
+		elems = root.getElementsByTagName( "*" );
+		for ( i = 0, l = elems.length; i < l; i++ ) {
+			processElem( elems[ i ]);
+		}
+	} else {
+		bind.push( root );
 	}
-
 	return items;
 }
 
 function objectType( object ) {
+	object = object[0];
 	return object
 		? object.nodeType
 			? "html"
@@ -543,15 +506,14 @@ function getField( object, path ) {
 function getLinkedPath( el ) {
 	var path, result = [];
 	// TODO Do we need basePath? If so, result = basePath ? [ basePath ] : []'
-	while ( !$.data( el, "jsViewItems" )) {
-		if ( path = el.getAttribute( "data-jq-path" )) {
+	while ( !$.data( el, "_jqDataLink" )) {
+		if ( path = el.getAttribute( "_jsViewItem" )) {
 			result.unshift( path );
 		}
 		el = el.parentNode;
 	}
 	return [ result.join( "." ), el ];
 }
-
 
 function getLeafObject( object, path ) {
 	if ( object && path ) {
@@ -576,9 +538,31 @@ function getPathObject( object, path ) {
 	}
 }
 
+function unbindLinkedElem( el ) {
+	var item = $.data( el, "_jsViewItem" );
+	if ( item && item.handler ) {
+		var isArray = $.isArray( item.data );
+		if ( isArray ) {
+			$( [item.data] ).unbind( "arrayChange", item.handler );
+		} else {
+			$( item.data ).unbind( "objectChange", item.handler );
+		}
+	}
+}
+
 // ============================
 
+var oldcleandata = $.cleanData;
+
 $.extend({
+	cleanData: function( elems ) {
+		for ( var j, i = 0, el; (el = elems[i]) != null; i++ ) {
+			// remove any links with this element as the target
+			unbindLinkedElem( el );
+		}
+		oldcleandata( elems );
+	},
+
 	dataLink: function( from, to, maps, callback ) {
 		var args = $.makeArray( arguments ),
 			l = args.length - 1;
@@ -590,8 +574,7 @@ $.extend({
 			return $.dataLink.apply( $, args );
 		}
 
-		var i, fromType, toType, tmpl,
-			links = [],
+		var i, map, links = [],
 			linkset = {   // TODO Consider exposing as prototype, for extension
 				links: links,
 				pushValues: function() {
@@ -624,37 +607,51 @@ $.extend({
 					}
 					return linkset;
 				}
+			},
+			from = wrapObject( from ),
+			to = wrapObject( to ),
+			targetElems = to,
+			fromType = objectType( from ),
+			toType = objectType( to ),
+			tmpl = (toType === "html" && typeof maps === "string") && maps;
+
+		if ( tmpl ) {
+			maps = undefined;
+		}
+
+		maps = maps
+			|| !unsupported[ fromType + toType ]
+			&& {
+				decl: true,
+				tmpl: tmpl
 			};
 
-		if ( from ) {
-			from = wrapObject( from );
-			to = wrapObject( to );
-			fromType = objectType( from[ 0 ]);
-			toType = objectType( to[ 0 ]);
-			tmpl = (toType === "html" && maps && maps.tmpl);
-			if ( tmpl ) {
-				maps = undefined;
-			}
-			maps = maps
-				|| !unsupported[ fromType + toType ]
-				&& {
-					decl: true,
-					tmpl: tmpl,
-					from: fromType === "html" ? "input[" + linkAttr + "]" : undefined
-				};
+		if ( fromType === "html" && maps.decl ) {
+			maps.from = "input[" + linkAttr + "]";
+		}
 
-			if ( maps ) {
-				maps = $.isArray( maps ) ? maps : [ maps ];
+		maps = $.isArray( maps ) ? maps : [ maps ];
 
-				i = maps.length;
+		i = maps.length;
 
-				while ( i-- ) {
-					addBinding( maps[i], from, to, callback, links );
+		while ( i-- ) {
+			map = maps[ i ];
+			if ( toType === "html" ) {
+				path = map.to;
+				if ( path ) {
+					targetElems = to.find( path ).add( to.filter( path ));
+					map.to = undefined;
 				}
+				targetElems.each( function(){
+					addBinding( map, from, $( this ), callback, links, true );
+				});
+			} else {
+				addBinding( map, from, to, callback, links );
 			}
 		}
 		return linkset;
 	},
+
 	dataPush: function( from, to, maps, callback ) {
 		// TODO - provide implementation
 	},
@@ -679,9 +676,9 @@ $.extend({
 		return getField( object, path );
 	},
 	viewItem: function( el ) {
-		var path = getLinkedPath( el ),
-		items = $.data( path[1], "jsViewItems" );
-		return items[ path[0]];
+		var item, node = el;
+		while ( (node = node.parentNode) && node.nodeType === 1 && !(item = $.data( node, "_jsViewItem" ))) {}
+		return item;
 	},
 
 	// operations: pop push reverse shift sort splice unshift move
@@ -726,15 +723,6 @@ $.extend({
 				}
 			}
 		}
-	}
-});
-
-$.extend({
-	unlink: function() {
-		// TODO - provide implementation
-	},
-	triggerLinks: function() {
-		// TODO - provide implementation
 	}
 });
 
