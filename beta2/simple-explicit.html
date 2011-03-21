@@ -28,7 +28,6 @@
 			<span class="convertedFirstName"></span>
 			<span data-field="address.city"></span>
 		</p>
-
 	</form>
 
 	<script type="text/javascript">
@@ -64,7 +63,6 @@
 
 		$("#myDeclarative").change(function(event) {
 			$.each( $(this).serializeArray(), function(index, object) {
-				//person[object.name] = object.value;
 				set(person, object.name, object.value);
 			});
 			$(person).trigger("refresh");
@@ -76,7 +74,6 @@
 			});
 			$("[data-field]").each(function() {
 				var field = $(this).data("field");
-				//$(this).text(person[field]);
 				$(this).text(get(person, field));
 			});
 			$("input").each(function() {
