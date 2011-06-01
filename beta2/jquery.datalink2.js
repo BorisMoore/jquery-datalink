@@ -392,15 +392,6 @@ function addBinding( map, from, to, callback, links, addViewItems, viewItem ) {
 
 // ============================
 // Helpers
-function getNestedItems( parentItems, basePath ) {
-	var items = {}, l=basePath.length;
-	for ( var path in parentItems ) {
-		if ( path.indexOf( basePath ) === 0 ) {
-			items[ path.slice( l )] = parentItems[ path ];
-		}
-	}
-	return items;
-}
 
 function setViewItems( root, object, map, callback, links ) {
 	// If bound add to nodes. If new path create new item, if prev path add to prev item. (LATER WILL ADD TEXT SIBLINGS). If bound add to prev item bindings.
