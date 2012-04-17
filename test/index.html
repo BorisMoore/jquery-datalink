@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>jQuery DataLink Plugin Test Suite</title>
+	<link rel="Stylesheet" media="screen" href="qunit.css" />
+	<script src="../jquery.js"></script>
+	<script src="../jquery.datalink.js"></script>
+	<script src="qunit.js"></script>
+	<script src="datalink-unit.js"></script>
+</head>
+
+<body id="body">
+	<h1 id="qunit-header">jQuery DataLink Plugin Test Suite</h1>
+	<h2 id="qunit-banner"></h2>
+	<div id="qunit-testrunner-toolbar"></div>
+	<h2 id="qunit-userAgent"></h2>
+	<ol id="qunit-tests"></ol>
+	<div id="qunit-fixture">
+	
+		<form id="datalinktest">
+		
+			<input type="hidden" name="hidey" id="hidey" value="ho" />
+
+			<label for="firstName">First Name:</label>
+			<input type="text" name="firstName" id="firstName" value="Wiggly" />
+			<label for="last-name">Last Name:</label>
+			<input type="text" name="last-name" id="last-name" value="World" />
+			<textarea name="roomy">	 Swelling     Itching     Brain	</textarea>
+			<textarea id="no-name">按捺不住内心的激动</textarea>
+			<input type="checkbox" name="loneCheck" value="кнут хороший" />
+			<select name="select1">
+				<option value="">defaulted</option>
+				<option value="spud-like">potatoe</option>
+				<option value="wiggly">Are We Not Men?</option>
+				<option value="world">wiggly</option>
+			</select>
+			<select name="select2" id="secondSelect">
+				<option value="">zilch</option>
+				<option value="spud-like">potatoe</option>
+				<option value="world" selected="selected">wiggly</option>
+				<option value="wiggly">living</option>
+			</select>
+			<select name="select3" multiple="multiple">
+				<option value="">he's got an</option>
+				<option value="uncontrollable" selected="selected">urge</option>
+				<option value="scream">shout</option>
+				<option selected="selected">unvalued</option>
+			</select>
+			<select name="select4" multiple="multiple">
+				<optgroup disabled="disabled">
+					<option value="">Nothing</option>
+					<option disabled="disabled" selected="selected" value="1">1</option>
+					<option selected="selected" value="2">2</option>
+				</optgroup>
+				<option selected="selected" disabled="disabled" value="3">3</option>
+				<option>no value</option>
+			</select>
+			<label for="rad0">
+				<input type="radio" name="rad" value="rad0" id="rad0" />
+				<input type="radio" name="rad" value="rad1" />
+				<input type="radio" name="rad" value="rad2" checked="checked"/>
+				<input type="radio" name="rad" value="rad3" />
+			</label>
+			
+			<input type="checkbox" name="chex[]" value="chex0" checked="checked" />
+			<input type="checkbox" name="chex[]" value="chex1" />
+			<input type="checkbox" name="chex[]" value="chex2" />
+			<input type="checkbox" name="chex[]" value="chex3" checked="checked" />
+			<input type="checkbox" name="chex[]" value="chex4" />
+
+			<input type="submit" name="submit" value="submitme" />
+			<input type="reset" name="reset" value="resetme" />
+			<button type="button" id="botón1" name="botón1">Butt1</button>
+
+		</form>
+		
+</div>
+
+</body>
+</html>
