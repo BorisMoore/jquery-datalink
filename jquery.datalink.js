@@ -128,7 +128,7 @@ $.extend($.fn, {
 			return self;
 		}
 		function matchByName(name) {
-			var selector = "[name=" + name + "], [id=" + name +"]";
+			var selector = '[name="' + name + '"], [id="' + name +'"]';
 			// include elements in this set that match as well a child matches
 			return self.filter(selector).add(self.find(selector));
 		}
