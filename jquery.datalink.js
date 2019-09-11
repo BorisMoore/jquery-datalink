@@ -79,7 +79,18 @@ $.extend({
 
 			$this.triggerHandler( eventNameSetField + parts[1] + "!", args );
 			if ( value !== undefined ) {
-				target[ field ] = value;
+        var props = field.split(/[\[]/g),
+            target_path = target,
+            last_prop = props.pop().replace(']', ''),
+            current_prop;
+
+        for (var i = 0, props_len = props.length; i < props_len; i++) {
+          current_prop = props[i].replace(']', '');
+          if (!target_path[current_prop]) target_path[current_prop] = {};
+          target_path = target_path[current_prop];
+        }
+        target_path[last_prop] = value;
+//				target[ field ] = value;
 			}
 			$this.triggerHandler( eventNameChangeField + parts[1] + "!", args );
 		}
@@ -128,7 +139,7 @@ $.extend($.fn, {
 			return self;
 		}
 		function matchByName(name) {
-			var selector = "[name=" + name + "], [id=" + name +"]";
+			var selector = "[name='" + name + "'], [id='" + name +"']";
 			// include elements in this set that match as well a child matches
 			return self.filter(selector).add(self.find(selector));
 		}
