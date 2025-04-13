@@ -1,6 +1,6 @@
 # jQuery Data Link plugin v1.0.0pre.
 
-**_Note_: This plugin is currently in beta form. It will not continue past beta, and has been superceded by [JsViews](https://github.com/BorisMoore/jsviews), which integrates data linking with templated rendering, using [JsRender templates](https://github.com/BorisMoore/jsrender) (next-generation jQuery Templates).**
+_jQuery Data Link is no longer in active development, and has been superseded by [JsViews](https://github.com/BorisMoore/jsviews), which integrates data linking with templated rendering, using [JsRender templates](https://github.com/BorisMoore/jsrender) (next-generation jQuery Templates).**
 
 **See [this blog post](http://www.borismoore.com/2011/10/jquery-templates-and-jsviews-roadmap.html) for more context on the roadmap for jQuery Templates, JsRender and JsViews...** 
 
